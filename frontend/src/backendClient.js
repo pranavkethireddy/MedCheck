@@ -58,7 +58,7 @@ export async function deleteMedication({ id, userId }) {
   )
 }
 
-// POST /api/check-interactions -> [{ severity, description, drugs, source, ... }, ...]
+// POST /api/check-interactions -> [{ severity, description, drugs, source, region, explanation, ... }, ...]
 // drugs: [{ rxcui, name }, ...] — pass names you already have (from
 // searchDrugs/getMedications) so this can hit the curated interaction list
 // with zero extra network calls; the backend resolves names via RxNorm on
@@ -69,4 +69,22 @@ export async function checkInteractions(drugs) {
     body: JSON.stringify({ drugs }),
   })
   return data.interactions
+}
+
+// Backboard-backed persistent memory (app/backboard_client.py). Best-effort
+// on the backend — if BACKBOARD_API_KEY isn't configured, these still
+// resolve normally (list comes back empty, save is a no-op) rather than
+// throwing, so the rest of the app never depends on this being set up.
+
+// GET /api/memory/list?userId=... -> { memories: [{ id, content, ... }, ...] }
+export async function getMemories(userId) {
+  return request(`/api/memory/list?userId=${encodeURIComponent(userId)}`)
+}
+
+// POST /api/memory/save -> { saved: true }
+export async function saveMemory({ userId, content, metadata }) {
+  return request('/api/memory/save', {
+    method: 'POST',
+    body: JSON.stringify({ userId, content, metadata }),
+  })
 }

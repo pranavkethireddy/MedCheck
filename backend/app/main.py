@@ -17,12 +17,15 @@ from urllib.parse import quote
 
 import requests
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import BackgroundTasks, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
+from app.backboard_client import recall_memories, remember
+from app.body_map import classify_region
 from app.drug_name_utils import normalize_drug_name
+from app.gemini_client import explain_interactions
 from app.known_interactions import lookup_known_interaction
 from app.mock_data import MOCK_PATIENTS
 from app.openfda_client import fetch_label_sections, find_mention
@@ -112,7 +115,7 @@ class SaveMedicationBody(BaseModel):
 
 
 @app.post("/api/save-medication", status_code=201)
-def api_save_medication(body: SaveMedicationBody):
+async def api_save_medication(body: SaveMedicationBody, background_tasks: BackgroundTasks):
     if not body.userId or not body.name or not body.rxcui:
         raise HTTPException(400, "Missing required fields: userId, name, rxcui.")
 
@@ -137,6 +140,12 @@ def api_save_medication(body: SaveMedicationBody):
         raise HTTPException(500, f"Failed to save medication: {e}")
 
     medication = result.data[0] if result.data else None
+
+    # Best-effort: teach the user's Backboard assistant this fact so it's
+    # there next session (see app/backboard_client.py — never raises, so a
+    # missing/invalid BACKBOARD_API_KEY can't break saving a medication).
+    background_tasks.add_task(remember, body.userId, f"Takes {body.name} (rxcui {body.rxcui}).")
+
     return {"medication": medication}
 
 
@@ -263,14 +272,14 @@ def _resolve_names(drugs: List[dict]) -> List[dict]:
 def check_interactions(drugs: List[dict]) -> list:
     resolved = _resolve_names(drugs)
     entries = [(d["rxcui"], d["name"], normalize_drug_name(d["name"])) for d in resolved]
-
+ 
     label_cache: dict = {}
-
+ 
     def get_label(norm_name):
         if norm_name not in label_cache:
             label_cache[norm_name] = fetch_label_sections(norm_name) if norm_name else {}
         return label_cache[norm_name]
-
+ 
     interactions = []
     for i in range(len(entries)):
         for j in range(i + 1, len(entries)):
@@ -278,7 +287,7 @@ def check_interactions(drugs: List[dict]) -> list:
             _, name_j, norm_j = entries[j]
             if not norm_i or not norm_j:
                 continue
-
+ 
             curated = lookup_known_interaction(norm_i, norm_j)
             if curated:
                 interactions.append(
@@ -287,6 +296,7 @@ def check_interactions(drugs: List[dict]) -> list:
                         "description": curated["description"],
                         "drugs": [name_i, name_j],
                         "source": "curated",
+                        "region": curated["region"],
                     }
                 )
                 continue
@@ -309,22 +319,32 @@ def check_interactions(drugs: List[dict]) -> list:
                         "drugs": [name_i, name_j],
                         "source": "openfda",
                         "evidence": snippet,
+                        # openFDA hits have no curated region, so classify off
+                        # the actual label text (which has real clinical
+                        # language) rather than the generic templated
+                        # "description" above — see app/body_map.py.
+                        "region": classify_region(f"{section_name} {snippet}"),
                     }
                 )
-
-    return sort_interactions_by_severity(interactions)
+ 
+    sorted_interactions = sort_interactions_by_severity(interactions)
+    return explain_interactions(sorted_interactions)
+    
 
 
 @app.api_route("/api/check-interactions", methods=["GET", "POST"])
-async def api_check_interactions(request: Request):
+async def api_check_interactions(request: Request, background_tasks: BackgroundTasks):
+    user_id = None
     if request.method == "POST":
         try:
             body = await request.json()
         except Exception:
             body = {}
         drugs = _parse_drugs_from_body(body or {})
+        user_id = (body or {}).get("userId")
     else:
         drugs = [{"rxcui": r, "name": None} for r in _parse_rxcuis(request.query_params.get("rxcuis", ""))]
+        user_id = request.query_params.get("userId")
 
     if len(drugs) < 2:
         raise HTTPException(
@@ -334,7 +354,58 @@ async def api_check_interactions(request: Request):
         )
 
     interactions = check_interactions(drugs)
+
+    # Best-effort: remember any flagged interaction so it's there next
+    # session too (see app/backboard_client.py). Only fires when the caller
+    # passed a real userId — anonymous/demo checks aren't persisted anywhere.
+    if user_id:
+        for interaction in interactions:
+            background_tasks.add_task(
+                remember,
+                user_id,
+                f"Flagged interaction ({interaction['severity']}): "
+                f"{' + '.join(interaction['drugs'])} — {interaction['description']}",
+            )
+
     return {"rxcuis": [d["rxcui"] for d in drugs], "interactions": interactions}
+
+
+# ---------------------------------------------------------------------------
+# /api/memory/* — Backboard-backed persistent memory ("Best Use of Backboard")
+#
+# Backed by app/backboard_client.py, which wraps the official backboard-sdk
+# (create_assistant / add_memory / get_memories). One Backboard "assistant"
+# per MedCheck user, looked up/created lazily and cached in the user_memory
+# Supabase table (see supabase/schema.sql) so it's created at most once per
+# user. Every function in backboard_client.py is best-effort — a missing or
+# invalid BACKBOARD_API_KEY degrades to "no memory" rather than a 500, same
+# philosophy as the Gemini explanation step above.
+# ---------------------------------------------------------------------------
+
+
+class SaveMemoryBody(BaseModel):
+    userId: Optional[str] = None
+    content: Optional[str] = None
+    metadata: Optional[dict] = None
+
+
+@app.post("/api/memory/save", status_code=201)
+async def api_save_memory(body: SaveMemoryBody):
+    if not body.userId or not body.content:
+        raise HTTPException(400, "Missing required fields: userId, content.")
+
+    await remember(body.userId, body.content, body.metadata)
+    return {"saved": True}
+
+
+@app.get("/api/memory/list")
+async def api_list_memory(userId: str = ""):
+    user_id = userId.strip()
+    if not user_id:
+        raise HTTPException(400, 'Missing required query param "userId".')
+
+    memories = await recall_memories(user_id)
+    return {"memories": memories}
 
 
 # ---------------------------------------------------------------------------

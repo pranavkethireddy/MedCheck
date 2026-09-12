@@ -27,6 +27,16 @@ create table if not exists interaction_flags (
   created_at timestamptz default now()
 );
 
+-- Caches one Backboard "assistant" id per user (app/backboard_client.py),
+-- so we create at most one assistant per user instead of one per request.
+-- Not user-facing data — service-role key only, no RLS needed to protect
+-- anything sensitive here (just an opaque third-party id).
+create table if not exists user_memory (
+  user_id uuid primary key references auth.users(id),
+  backboard_assistant_id text not null,
+  created_at timestamptz default now()
+);
+
 create index if not exists medications_user_id_idx on medications(user_id);
 create index if not exists interaction_flags_user_id_idx on interaction_flags(user_id);
 

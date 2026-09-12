@@ -1,0 +1,334 @@
+:root {
+  --bg: #f6f9fd;
+  --panel-dark: #0f2545;
+  --panel-dark-soft: #16345c;
+  --ink: #0b1424;
+  --ink-soft: #5b6b82;
+  --accent: #2f5fd9;
+  --accent-hover: #24469e;
+  --accent-soft: #e3ecfc;
+  --warn: #b3441f;
+  --card-bg: #ffffff;
+  --border: #dce6f5;
+
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--ink);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  min-height: 100vh;
+}
+
+h1, h2 {
+  font-family: ui-serif, Georgia, "Times New Roman", serif;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* --- Auth screen: split panel layout --- */
+
+.auth-page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+@media (max-width: 800px) {
+  .auth-page {
+    grid-template-columns: 1fr;
+  }
+}
+
+.brand-panel {
+  background: linear-gradient(160deg, var(--panel-dark) 0%, var(--panel-dark-soft) 100%);
+  color: #eaf1ff;
+  padding: 4rem 3rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1.25rem;
+  animation: panelFadeSlide 0.55s ease-out both;
+}
+
+.brand-mark {
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 2.9rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  margin: 0;
+  background: linear-gradient(120deg, #ffffff 0%, #bcd4ff 60%, #6fa1ff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.brand-panel h1 {
+  font-size: 2.4rem;
+  line-height: 1.15;
+  max-width: 18ch;
+  color: #f4f8ff;
+}
+
+.brand-copy {
+  color: #a9bedb;
+  max-width: 38ch;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.form-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: var(--bg);
+  animation: panelFadeSlide 0.55s ease-out 0.12s both;
+}
+
+@keyframes panelFadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-panel,
+  .form-panel {
+    animation: none;
+  }
+}
+
+@media (max-width: 800px) {
+  .brand-mark {
+    font-size: 2.2rem;
+  }
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.auth-card h2 {
+  font-size: 1.6rem;
+  margin-bottom: 0.5rem;
+}
+
+.auth-card label {
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+
+.auth-card input {
+  padding: 0.65rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 1rem;
+  background: var(--card-bg);
+  color: var(--ink);
+}
+
+.auth-card input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
+}
+
+.auth-card button[type="submit"] {
+  margin-top: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 6px;
+  background: var(--accent);
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.auth-card button[type="submit"]:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.auth-card button[type="submit"]:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.link-button {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  padding: 0.25rem 0;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.link-button:hover {
+  text-decoration: underline;
+}
+
+.form-error {
+  color: var(--warn);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.demo-mode-note {
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+  margin: 0.25rem 0 0;
+}
+
+/* --- Placeholder home screen (after fake login) --- */
+
+.placeholder-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.placeholder-card {
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.placeholder-card h1 {
+  font-size: 2rem;
+  color: var(--panel-dark);
+}
+
+.placeholder-note {
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+
+/* --- Home page (logged in): add medication + list --- */
+
+.home-page {
+  min-height: 100vh;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+.home-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+}
+
+.home-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.home-section h2 {
+  font-size: 1.3rem;
+  margin-bottom: 0.75rem;
+  color: var(--panel-dark);
+}
+
+.add-med {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  position: relative;
+}
+
+.add-med label {
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+
+.add-med input {
+  padding: 0.65rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.add-med input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
+}
+
+.suggestion-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--card-bg);
+}
+
+.suggestion-list li + li {
+  border-top: 1px solid var(--border);
+}
+
+.suggestion-list button {
+  width: 100%;
+  text-align: left;
+  padding: 0.6rem 0.8rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+
+.suggestion-list button:hover {
+  background: var(--accent-soft);
+}
+
+.suggestion-empty {
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.med-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.med-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card-bg);
+}
+
+.med-list-empty {
+  color: var(--ink-soft);
+}

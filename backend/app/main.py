@@ -376,7 +376,7 @@ async def api_check_interactions(request: Request, background_tasks: BackgroundT
 # Backed by app/backboard_client.py, which wraps the official backboard-sdk
 # (create_assistant / add_memory / get_memories). One Backboard "assistant"
 # per MedCheck user, looked up/created lazily and cached in the user_memory
-# Supabase table (see supabase/schema.sql) so it's created at most once per
+# Supabase table (see supabase_sql/schema.sql) so it's created at most once per
 # user. Every function in backboard_client.py is best-effort — a missing or
 # invalid BACKBOARD_API_KEY degrades to "no memory" rather than a 500, same
 # philosophy as the Gemini explanation step above.

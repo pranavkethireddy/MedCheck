@@ -2,14 +2,14 @@
   --bg: #eef2f8;
   --panel-dark: #0f2545;
   --panel-dark-soft: #16345c;
-  --ink: #0b1424;
-  --ink-soft: #5b6b82;
+  --ink: #14181d;
+  --ink-soft: #5a6472;
   --accent: #2f5fd9;
   --accent-hover: #24469e;
   --accent-soft: #e3ecfc;
   --warn: #b3441f;
   --card-bg: #ffffff;
-  --border: #dce6f5;
+  --border: #dfe3e8;
   --form-bg: #faf7f1;
   --input-bg: #f4efe4;
   --border-warm: #e6ddc9;
@@ -247,98 +247,40 @@ h1, h2 {
 
 /* --- Home page (logged in): add medication + list --- */
 
-.home-page {
-  position: relative;
-  min-height: 100vh;
-  overflow: hidden;
-  background: linear-gradient(160deg, var(--panel-dark) 0%, var(--panel-dark-soft) 100%);
-  padding: 2rem 1.5rem 4rem;
+
+
+
+
+
+
+
+
+
+
+
+
+@media (prefers-reduced-motion: reduce) {
+  .home-page::before,
+  .home-page::after {
+    animation: none;
+  }
 }
 
-.home-page::before,
-.home-page::after {
-  content: '';
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(70px);
-  opacity: 0.4;
-  pointer-events: none;
-  z-index: 0;
-}
 
-.home-page::before {
-  width: 420px;
-  height: 420px;
-  background: #3d6fe0;
-  top: -140px;
-  right: -120px;
-}
 
-.home-page::after {
-  width: 380px;
-  height: 380px;
-  background: #8b5cf6;
-  bottom: -160px;
-  left: -140px;
-}
 
-.home-content {
-  position: relative;
-  z-index: 1;
-  max-width: 640px;
-  margin: 0 auto;
-}
 
-.home-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 2.5rem;
-}
 
-.home-brand-lockup {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
 
-.home-brand-icon {
-  width: 2.4rem;
-  height: 2.4rem;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.12);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  color: #bcd4ff;
-}
 
-.home-brand-icon svg {
-  width: 1.2rem;
-  height: 1.2rem;
-}
 
-.home-header .brand-mark {
-  font-size: 1.3rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  background: none;
-  -webkit-background-clip: initial;
-  background-clip: initial;
-  color: #f4f8ff;
-  margin: 0;
-}
 
-.home-header .link-button {
-  color: #bcd4ff;
-}
 
-.home-greeting {
-  color: #a9bedb;
-  font-size: 0.9rem;
-  margin: 0.15rem 0 0;
-}
+
+
+
+
+
 
 .home-main {
   display: flex;
@@ -354,12 +296,8 @@ h1, h2 {
   animation: panelFadeSlide 0.5s ease-out both;
 }
 
-.home-main .home-section:nth-child(2) {
-  animation-delay: 0.06s;
-}
-
-.home-main .home-section:nth-child(3) {
-  animation-delay: 0.12s;
+.home-main > *:nth-child(2) {
+  animation-delay: 0.08s;
 }
 
 .home-section h2 {
@@ -470,8 +408,7 @@ h1, h2 {
 }
 
 .med-list-item:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px -10px rgba(15, 37, 69, 0.35);
+  border-color: var(--accent);
 }
 
 .med-item-main {
@@ -488,7 +425,6 @@ h1, h2 {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
 .med-icon-bubble svg {
@@ -499,7 +435,6 @@ h1, h2 {
 
 .med-icon-bubble-muted {
   background: var(--accent-soft);
-  box-shadow: none;
 }
 
 .med-icon-bubble-muted svg {
@@ -509,7 +444,16 @@ h1, h2 {
 }
 
 .med-item-pop {
-  animation: popIn 0.3s ease-out both;
+  animation: fadeIn 0.25s ease-out both;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes popIn {
@@ -557,12 +501,28 @@ h1, h2 {
 
 .med-icon-bubble-safe {
   background: #e2f5ea;
+  animation: safePulse 2.4s ease-in-out infinite;
 }
 
 .med-icon-bubble-safe svg {
   color: #1f9d5a;
   width: 20px;
   height: 20px;
+}
+
+@keyframes safePulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(31, 157, 90, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(31, 157, 90, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .med-icon-bubble-safe {
+    animation: none;
+  }
 }
 
 .interaction-list {
@@ -639,6 +599,885 @@ h1, h2 {
   color: var(--ink-soft);
   font-size: 0.9rem;
   line-height: 1.5;
+}
+
+/* --- Mode switcher (Individual / Caregiver) --- */
+
+
+
+/* --- Caregiver access card (Individual mode) --- */
+
+.caregiver-access-card h2 {
+  font-size: 1.3rem;
+  margin-bottom: 0.5rem;
+}
+
+.caregiver-access-copy {
+  color: var(--ink-soft);
+  line-height: 1.5;
+  margin: 0 0 1rem;
+}
+
+.caregiver-code-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--accent-soft);
+  border-radius: 8px;
+}
+
+.caregiver-code {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--panel-dark);
+  letter-spacing: 0.03em;
+}
+
+/* --- Caregiver mode screen --- */
+
+.caregiver-mode-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.section-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.section-heading-row h2 {
+  margin: 0;
+}
+
+.info-tooltip-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.info-tooltip-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: none;
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 1;
+  transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.info-tooltip-btn:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent);
+  transform: scale(1.1);
+}
+
+.info-tooltip-popover {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  width: 280px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem 1.1rem;
+  box-shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.35);
+  z-index: 5;
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+  text-align: left;
+  animation: popIn 0.18s ease-out both;
+}
+
+.info-tooltip-popover p {
+  margin: 0 0 0.5rem;
+}
+
+.info-tooltip-popover p:last-child {
+  margin-bottom: 0;
+}
+
+.info-tooltip-popover ol {
+  margin: 0 0 0.5rem;
+  padding-left: 1.1rem;
+  line-height: 1.5;
+}
+
+.how-to-note {
+  font-style: italic;
+}
+
+.patient-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.patient-tab {
+  border: 1px solid var(--border);
+  background: none;
+  border-radius: 999px;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.patient-tab-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.patient-tab-add {
+  color: var(--accent);
+  border-style: dashed;
+}
+
+.add-patient-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 320px;
+}
+
+.add-patient-form label {
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+
+.add-patient-form input {
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.add-patient-form-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.add-patient-form button[type="submit"] {
+  padding: 0.6rem 1.1rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: white;
+  cursor: pointer;
+}
+
+/* --- One-time medication check --- */
+
+.one-time-check h2 {
+  font-size: 1.3rem;
+  margin-bottom: 0.5rem;
+}
+
+.one-time-check-copy {
+  color: var(--ink-soft);
+  line-height: 1.5;
+  margin: 0 0 1rem;
+}
+
+.one-time-check label {
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+
+.one-time-check input {
+  width: 100%;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 1rem;
+  margin-top: 0.35rem;
+}
+
+.one-time-check input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
+}
+
+.one-time-result {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--border);
+}
+
+.one-time-result-clear {
+  color: #1f9d5a;
+  margin: 0 0 0.75rem;
+}
+
+.interactions-empty-wrap-inline {
+  color: var(--ink-soft);
+  margin: 0 0 0.75rem;
+}
+
+.one-time-note {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  font-style: italic;
+  margin: 0.75rem 0;
+}
+
+/* --- Avatar + role dropdown (replaces the old pill switcher) --- */
+
+.role-menu {
+  position: relative;
+}
+
+.role-menu-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  padding: 0.35rem 1rem 0.35rem 0.35rem;
+  cursor: pointer;
+  color: #eaf1ff;
+}
+
+.role-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.role-menu-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.25;
+}
+
+.role-username {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #eaf1ff;
+}
+
+.role-current {
+  font-size: 0.75rem;
+  color: #bcd4ff;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.role-chevron {
+  font-size: 0.7rem;
+}
+
+.role-menu-popover {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.35);
+  z-index: 6;
+  min-width: 160px;
+  animation: popIn 0.18s ease-out both;
+}
+
+.role-menu-option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.6rem 0.9rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--ink);
+}
+
+.role-menu-option:hover {
+  background: var(--accent-soft);
+}
+
+.role-menu-option-active {
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.logout-btn {
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 999px;
+  padding: 0.45rem 1.1rem;
+  color: #eaf1ff;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.logout-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* --- Medication timing --- */
+
+.med-time-badge {
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+  background: var(--border);
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  margin-left: 0.5rem;
+}
+
+.add-med-time-label {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  margin-top: 0.75rem;
+  display: block;
+}
+
+.add-med-time-input {
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  margin-top: 0.3rem;
+  width: auto;
+}
+
+.interaction-timing {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  font-style: italic;
+  margin: 0.5rem 0 0;
+}
+
+/* --- Photographic hero (Individual mode only) --- */
+
+/* --- Side-by-side long-term / temporary layout --- */
+
+.home-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  align-items: stretch;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 860px) {
+  .home-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+.home-columns .add-med {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px dashed var(--border);
+}
+
+/* --- Animated icon badges, one per section, instead of photos --- */
+
+.section-icon-badge {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  margin-bottom: 1rem;
+  flex-shrink: 0;
+}
+
+.section-icon-badge svg {
+  width: 26px;
+  height: 26px;
+}
+
+.badge-blue {
+  background: linear-gradient(135deg, #2f5fd9, #6fa1ff);
+  box-shadow: 0 10px 28px -10px rgba(47, 95, 217, 0.6);
+}
+
+.badge-green {
+  background: linear-gradient(135deg, #1f9d5a, #4cd08a);
+  box-shadow: 0 10px 28px -10px rgba(31, 157, 90, 0.6);
+}
+
+.badge-violet {
+  background: linear-gradient(135deg, #8b5cf6, #b79bff);
+  box-shadow: 0 10px 28px -10px rgba(139, 92, 246, 0.6);
+}
+
+.icon-spin svg {
+  animation: iconSpin 9s linear infinite;
+}
+
+.icon-float {
+  animation: iconFloat 3.4s ease-in-out infinite;
+}
+
+.icon-pulse {
+  animation: iconPulse 2.4s ease-in-out infinite;
+}
+
+@keyframes iconSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes iconFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes iconPulse {
+  0%, 100% {
+    box-shadow: 0 10px 28px -10px rgba(47, 95, 217, 0.6), 0 0 0 0 rgba(47, 95, 217, 0.35);
+  }
+  50% {
+    box-shadow: 0 10px 28px -10px rgba(47, 95, 217, 0.6), 0 0 0 10px rgba(47, 95, 217, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icon-spin svg,
+  .icon-float,
+  .icon-pulse {
+    animation: none;
+  }
+}
+
+/* --- Clean banner photo, used only in the caregiver card --- */
+
+.caregiver-access-media {
+  margin-bottom: 1.25rem;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.caregiver-access-media img {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  display: block;
+  animation: photoReveal 0.6s ease-out both;
+}
+
+@keyframes photoReveal {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .caregiver-access-media img {
+    animation: none;
+  }
+}
+
+/* --- Status banner: answers "am I okay?" before anything else --- */
+
+.status-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: 12px;
+  border-left: 4px solid;
+  animation: panelFadeSlide 0.4s ease-out both;
+}
+
+.status-banner-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.status-banner-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.status-banner-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0 0 0.2rem;
+}
+
+.status-banner-sub {
+  font-size: 0.9rem;
+  margin: 0;
+  opacity: 0.85;
+  line-height: 1.45;
+}
+
+.status-banner-alert {
+  background: #fbeee7;
+  border-left-color: var(--warn);
+  color: #6d2a11;
+}
+
+.status-banner-alert .status-banner-icon {
+  background: rgba(179, 68, 31, 0.14);
+  color: var(--warn);
+}
+
+.status-banner-minor {
+  background: #fbf6e3;
+  border-left-color: #c9a227;
+  color: #6b5410;
+}
+
+.status-banner-minor .status-banner-icon {
+  background: rgba(201, 162, 39, 0.16);
+  color: #9c7a13;
+}
+
+.status-banner-clear {
+  background: #e8f6ee;
+  border-left-color: #1f9d5a;
+  color: #14512f;
+}
+
+.status-banner-clear .status-banner-icon {
+  background: rgba(31, 157, 90, 0.14);
+  color: #1f9d5a;
+}
+
+.status-banner-neutral {
+  background: var(--card-bg);
+  border-left-color: var(--accent);
+  color: var(--ink);
+}
+
+.status-banner-neutral .status-banner-icon {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* --- Visual hierarchy: not every section deserves equal weight --- */
+
+.home-section-primary {
+  border-top: 3px solid var(--accent);
+}
+
+.home-section-quiet {
+  background: rgba(255, 255, 255, 0.94);
+}
+
+.home-section-quiet h2 {
+  font-size: 1.1rem;
+}
+
+/* ==========================================================
+   Site frame: nav bar, page title band, sections, footer
+   ========================================================== */
+
+.site {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel-dark);
+}
+
+.site-container {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* --- Top navigation --- */
+
+.site-nav {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: rgba(11, 27, 51, 0.92);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.site-nav-inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0.75rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.site-nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.site-nav-brand-icon {
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 6px;
+  background: var(--accent);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.site-nav-brand-icon svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.site-nav-brand-text {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #f4f8ff;
+}
+
+.site-nav-links {
+  display: flex;
+  list-style: none;
+  gap: 1.5rem;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+}
+
+.site-nav-links a {
+  color: #bcd4ff;
+  text-decoration: none;
+  font-size: 0.9rem;
+  padding: 0.4rem 0;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.site-nav-links a:hover {
+  color: #ffffff;
+  border-bottom-color: var(--accent);
+}
+
+.site-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-left: auto;
+}
+
+@media (max-width: 900px) {
+  .site-nav-links {
+    display: none;
+  }
+}
+
+/* --- Page title band --- */
+
+.page-title-band {
+  background: linear-gradient(160deg, var(--panel-dark) 0%, var(--panel-dark-soft) 100%);
+  padding: 3rem 0 2.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.page-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #8fa5c7;
+  margin: 0 0 0.6rem;
+}
+
+.page-title-band h1 {
+  font-size: 2.1rem;
+  line-height: 1.2;
+  color: #f4f8ff;
+  margin: 0 0 0.6rem;
+}
+
+.page-title-sub {
+  color: #a9bedb;
+  line-height: 1.6;
+  max-width: 60ch;
+  margin: 0;
+  font-size: 0.98rem;
+}
+
+/* --- Main content area --- */
+
+.site-main {
+  flex: 1;
+  background: #f2f5fa;
+  padding: 3rem 0 4rem;
+}
+
+.page-section {
+  margin-bottom: 3rem;
+  scroll-margin-top: 5rem; /* so anchor links don't hide under the sticky nav */
+}
+
+.page-section:last-child {
+  margin-bottom: 0;
+}
+
+.page-section-head {
+  margin-bottom: 1.25rem;
+}
+
+.page-section-head h2 {
+  font-size: 1.5rem;
+  color: var(--panel-dark);
+  margin: 0 0 0.35rem;
+}
+
+.page-section-sub {
+  color: var(--ink-soft);
+  margin: 0;
+  line-height: 1.55;
+  max-width: 65ch;
+}
+
+.page-section .home-section h3 {
+  font-size: 1.15rem;
+  color: var(--panel-dark);
+  margin: 0;
+}
+
+/* --- Footer --- */
+
+.site-footer {
+  background: #0b1b33;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 3rem 0 2rem;
+}
+
+.site-footer-inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.site-footer-disclaimer {
+  padding-bottom: 2rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  max-width: 70ch;
+}
+
+.site-footer-disclaimer-title {
+  color: #f4f8ff;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+}
+
+.site-footer-disclaimer p {
+  color: #8fa5c7;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.site-footer-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.site-footer-col h3 {
+  color: #f4f8ff;
+  font-size: 0.95rem;
+  margin: 0 0 0.75rem;
+}
+
+.site-footer-col ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.site-footer-col a {
+  color: #8fa5c7;
+  text-decoration: none;
+  font-size: 0.88rem;
+}
+
+.site-footer-col a:hover {
+  color: #bcd4ff;
+  text-decoration: underline;
+}
+
+.site-footer-bottom {
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.site-footer-bottom p {
+  color: #6a7f9e;
+  font-size: 0.82rem;
+  margin: 0;
+}
+
+/* --- Adjustments now that sections sit on a light main area --- */
+
+.site-main .home-section {
+  border: 1px solid var(--border);
+  box-shadow: none;
+}
+
+.site-main .home-main {
+  gap: 0;
 }
 
 /* --- Body map --- */

@@ -7,7 +7,7 @@ every visit.
 
 Backed by the official backboard-sdk (https://docs.backboard.io). One
 Backboard "assistant" per MedCheck user — created lazily on first use and
-cached in the `user_memory` Supabase table (see supabase/schema.sql) so we
+cached in the `user_memory` Supabase table (see supabase_sql/schema.sql) so we
 never create more than one assistant per user.
 
 Every public function here is best-effort: a missing/invalid

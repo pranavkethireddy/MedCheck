@@ -1,20 +1,12 @@
-// Presentational only — App.jsx owns the actual checkInteractions() fetch
-// (single source of truth shared with BodyMap.jsx, so both render the same
-// data instead of each making their own network call).
-//
-// Each interaction item shape (from /api/check-interactions):
-//   { severity, description, drugs: [a, b], source, region, explanation? }
-// - severity/description/drugs/source: Backend Person 1's curated-list /
-//   openFDA check-interactions logic
-// - region: which body-map pin this interaction is shown under
-// - explanation: Backend Person 2's Gemini rewrite of "description" into
-//   plain, calm language (falls back to the raw description if Gemini
-//   failed or GEMINI_API_KEY isn't set — see gemini_client.py)
+import { SEVERITY_LABEL } from './interactionData.js'
+import { hoursApart } from './timing.js'
+import { useInteractionCheck } from './useInteractionCheck.js'
 
-const SEVERITY_LABEL = {
-  significant: 'Significant — talk to your provider',
-  minor: 'Minor — be aware',
-}
+// Reused in two places: Individual mode's own long-term list, and
+// CaregiverMode.jsx for whichever patient is currently selected — so this
+// stays self-contained (takes `medications`, fetches its own interaction
+// check) rather than depending on state lifted in App.jsx, which only
+// exists for the Individual-mode case.
 
 function ShieldIcon() {
   return (
@@ -30,8 +22,10 @@ function ShieldIcon() {
   )
 }
 
-function InteractionResults({ interactions, loading, error, minMedications }) {
-  if (!minMedications) {
+function InteractionResults({ medications }) {
+  const { interactions, loading, error, usingFallback } = useInteractionCheck(medications)
+
+  if (medications.length < 2) {
     return (
       <div className="interactions-empty-wrap">
         <span className="med-icon-bubble med-icon-bubble-muted">
@@ -57,7 +51,18 @@ function InteractionResults({ interactions, loading, error, minMedications }) {
     return <p className="form-error">{error}</p>
   }
 
-  if (!interactions || interactions.length === 0) {
+  // Attach a timing gap (if both meds in the pair have a time set) to each
+  // flagged interaction, so we can show a spacing note alongside it. Real,
+  // backend-sourced interactions don't carry "questions" (that's a mock-data
+  // extra) — the `interaction.questions` check below just no-ops for those.
+  const flagged = interactions.map((interaction) => {
+    const [nameA, nameB] = interaction.drugs
+    const medA = medications.find((m) => m.name === nameA)
+    const medB = medications.find((m) => m.name === nameB)
+    return { ...interaction, gap: hoursApart(medA?.timeOfDay, medB?.timeOfDay) }
+  })
+
+  if (flagged.length === 0) {
     return (
       <div className="interactions-empty-wrap">
         <span className="med-icon-bubble med-icon-bubble-safe">
@@ -69,19 +74,48 @@ function InteractionResults({ interactions, loading, error, minMedications }) {
   }
 
   return (
-    <ul className="interaction-list">
-      {interactions.map((interaction, i) => (
-        <li key={i} className={`interaction-item interaction-${interaction.severity}`}>
-          <span className="interaction-badge">
-            {SEVERITY_LABEL[interaction.severity] || interaction.severity}
-          </span>
-          <p className="interaction-drugs">{interaction.drugs.join(' + ')}</p>
-          <p className="interaction-description">
-            {interaction.explanation || interaction.description}
-          </p>
-        </li>
-      ))}
-    </ul>
+    <>
+      {usingFallback && (
+        <p className="suggestion-empty">
+          (Backend unreachable — showing results from a small built-in demo list instead.)
+        </p>
+      )}
+      <ul className="interaction-list">
+        {flagged.map((interaction, i) => (
+          <li
+            key={interaction.drugs.join('-') + i}
+            className={`interaction-item interaction-${interaction.severity}`}
+          >
+            <span className="interaction-badge">
+              {SEVERITY_LABEL[interaction.severity] || interaction.severity}
+            </span>
+            <p className="interaction-drugs">{interaction.drugs.join(' + ')}</p>
+            <p className="interaction-description">
+              {interaction.explanation || interaction.description}
+            </p>
+
+            {interaction.gap != null && (
+              <p className="interaction-timing">
+                You take these about {interaction.gap} hour{interaction.gap === 1 ? '' : 's'} apart.
+                {interaction.severity === 'minor' &&
+                  ' Spacing doses out like this can help reduce risk for minor interactions — but check with your provider if you\'re unsure.'}
+              </p>
+            )}
+
+            {interaction.questions && (
+              <div className="interaction-questions">
+                <p className="interaction-questions-title">Questions to ask your provider:</p>
+                <ul>
+                  {interaction.questions.map((q) => (
+                    <li key={q}>{q}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </li>
+        ))}
+      </ul>
+    </>
   )
 }
 

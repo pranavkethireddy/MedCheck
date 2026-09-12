@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import bodyOutlineSrc from './assets/body-outline.png'
+import { useInteractionCheck } from './useInteractionCheck.js'
 
 // Visual companion to InteractionResults: same interaction data, pinned onto
 // a body outline instead of a list, so it's obvious at a glance *where* a
@@ -57,10 +58,11 @@ function BodyOutline() {
   return <img src={bodyOutlineSrc} className="body-outline" alt="" aria-hidden="true" />
 }
 
-function BodyMap({ interactions, loading, error, minMedications }) {
+function BodyMap({ medications }) {
   const [activeRegion, setActiveRegion] = useState(null)
+  const { interactions, loading, error } = useInteractionCheck(medications)
 
-  if (!minMedications) {
+  if (!medications || medications.length < 2) {
     return <p className="med-list-empty">Add at least two medications to see where interactions show up.</p>
   }
   if (loading) {

@@ -5,16 +5,15 @@ import MedicationList from './MedicationList.jsx'
 import InteractionResults from './InteractionResults.jsx'
 import BodyMap from './BodyMap.jsx'
 import AssistantMemory from './AssistantMemory.jsx'
+import CaregiverAccessCard from './CaregiverAccessCard.jsx'
+import CaregiverMode from './CaregiverMode.jsx'
+import OneTimeMedicationCheck from './OneTimeMedicationCheck.jsx'
+import InfoTooltip from './InfoTooltip.jsx'
+import StatusBanner from './StatusBanner.jsx'
+import SiteNav from './SiteNav.jsx'
+import SiteFooter from './SiteFooter.jsx'
 import { supabase, isSupabaseConfigured } from './supabaseClient.js'
-import { saveMedication, getMedications, deleteMedication, checkInteractions } from './backendClient.js'
-
-function CrossIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <path d="M12 3v18M3 12h18" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
-    </svg>
-  )
-}
+import { saveMedication, getMedications, deleteMedication } from './backendClient.js'
 
 function App() {
   const [user, setUser] = useState(null)
@@ -26,9 +25,7 @@ function App() {
   const [medications, setMedications] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [interactions, setInteractions] = useState([])
-  const [interactionsLoading, setInteractionsLoading] = useState(false)
-  const [interactionsError, setInteractionsError] = useState('')
+  const [mode, setMode] = useState('individual') // 'individual' | 'caregiver'
 
   // `user.id` only exists when LoginScreen did a REAL Supabase login (see
   // supabaseClient.js's isSupabaseConfigured) — the fallback demo login
@@ -93,38 +90,6 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id])
 
-  // Single source of truth for interaction checks — both the list view
-  // (InteractionResults) and the body map (BodyMap) render the same data
-  // instead of each fetching it separately.
-  useEffect(() => {
-    if (medications.length < 2) {
-      setInteractions([])
-      setInteractionsError('')
-      return
-    }
-
-    let cancelled = false
-    setInteractionsLoading(true)
-    setInteractionsError('')
-
-    const drugs = medications.map((m) => ({ rxcui: m.rxcui, name: m.name }))
-    checkInteractions(drugs)
-      .then((results) => {
-        if (!cancelled) setInteractions(results || [])
-      })
-      .catch((err) => {
-        console.error('Failed to check interactions:', err.message)
-        if (!cancelled) setInteractionsError("Couldn't check interactions right now.")
-      })
-      .finally(() => {
-        if (!cancelled) setInteractionsLoading(false)
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [medications])
-
   if (checkingSession) {
     return (
       <div className="placeholder-page">
@@ -149,8 +114,15 @@ function App() {
     }
 
     try {
-      const saved = await saveMedication({ userId: user.id, name: drug.name, rxcui: drug.rxcui })
-      setMedications((prev) => [...prev, saved])
+      const saved = await saveMedication({
+        userId: user.id,
+        name: drug.name,
+        rxcui: drug.rxcui,
+        timeOfDay: drug.timeOfDay,
+      })
+      // Fall back to the locally-entered time if the backend doesn't
+      // return/store it yet — keeps the badge showing either way.
+      setMedications((prev) => [...prev, { ...saved, timeOfDay: saved.timeOfDay ?? drug.timeOfDay }])
     } catch (err) {
       console.error('Failed to save medication:', err.message)
       setError(`Couldn't save ${drug.name}: ${err.message}`)
@@ -183,71 +155,154 @@ function App() {
     setUser(null)
     setMedications([])
     setError('')
+    setMode('individual')
   }
 
+  const firstName = user?.email ? user.email.split('@')[0] : null
+
   return (
-    <div className="home-page">
-      <div className="home-content">
-        <header className="home-header">
-          <div className="home-brand-lockup">
-            <span className="home-brand-icon">
-              <CrossIcon />
-            </span>
-            <div>
-              <p className="brand-mark">MedCheck</p>
-              <p className="home-greeting">
-                Welcome back{user?.email ? `, ${user.email.split('@')[0]}` : ''} 👋
-              </p>
-            </div>
-          </div>
-          <button className="link-button" onClick={handleLogout}>
-            Log out
-          </button>
-        </header>
+    <div className="site" id="top">
+      <SiteNav
+        mode={mode}
+        onModeChange={setMode}
+        userEmail={user?.email}
+        onLogout={handleLogout}
+      />
 
-        <main className="home-main">
-          <section className="home-section">
-            <h2>Your medications</h2>
-            {error && <p className="form-error">{error}</p>}
-            {loading ? (
-              <p className="med-list-empty">Loading your medications…</p>
-            ) : (
-              <MedicationList medications={medications} onRemove={handleRemove} />
-            )}
-          </section>
-
-          <section className="home-section">
-            <AddMedication onAdd={handleAdd} />
-          </section>
-
-          <section className="home-section">
-            <h2>Interaction check</h2>
-            <InteractionResults
-              interactions={interactions}
-              loading={interactionsLoading}
-              error={interactionsError}
-              minMedications={medications.length >= 2}
-            />
-          </section>
-
-          <section className="home-section">
-            <h2>Where it happens</h2>
-            <BodyMap
-              interactions={interactions}
-              loading={interactionsLoading}
-              error={interactionsError}
-              minMedications={medications.length >= 2}
-            />
-          </section>
-
-          {isRealUser && (
-            <section className="home-section">
-              <h2>Your assistant remembers</h2>
-              <AssistantMemory userId={user.id} />
-            </section>
-          )}
-        </main>
+      <div className="page-title-band">
+        <div className="site-container">
+          <p className="page-eyebrow">
+            {mode === 'individual' ? 'Individual account' : 'Caregiver account'}
+          </p>
+          <h1>
+            {mode === 'individual'
+              ? `Your medication overview${firstName ? `, ${firstName}` : ''}`
+              : 'Patients you support'}
+          </h1>
+          <p className="page-title-sub">
+            {mode === 'individual'
+              ? 'Everything you take, checked against known interactions — so you know what to bring up with your provider.'
+              : 'View medications and interaction flags for anyone who has shared their access code with you.'}
+          </p>
+        </div>
       </div>
+
+      <main className="site-main">
+        <div className="site-container">
+          {mode === 'caregiver' ? (
+            <CaregiverMode />
+          ) : (
+            <div className="home-main">
+              <section id="overview" className="page-section">
+                <StatusBanner medications={medications} />
+              </section>
+
+              {medications.length >= 2 && (
+                <section id="interactions" className="page-section">
+                  <div className="page-section-head">
+                    <div className="section-heading-row">
+                      <h2>Interaction check</h2>
+                      <InfoTooltip>
+                        Every pair of your long-term medications is compared for
+                        known risky combinations, flagged by how serious they are.
+                      </InfoTooltip>
+                    </div>
+                    <p className="page-section-sub">
+                      Reviewed automatically whenever your medication list changes.
+                    </p>
+                  </div>
+                  <div className="home-section home-section-primary">
+                    <InteractionResults medications={medications} />
+                  </div>
+                </section>
+              )}
+
+              {medications.length >= 2 && (
+                <section id="body-map" className="page-section">
+                  <div className="page-section-head">
+                    <div className="section-heading-row">
+                      <h2>Where it happens</h2>
+                      <InfoTooltip>
+                        The same interactions above, pinned to roughly where in
+                        the body they show up — hover or tap a pin for details.
+                      </InfoTooltip>
+                    </div>
+                  </div>
+                  <div className="home-section">
+                    <BodyMap medications={medications} />
+                  </div>
+                </section>
+              )}
+
+              <section id="medications" className="page-section">
+                <div className="page-section-head">
+                  <h2>Manage what you take</h2>
+                  <p className="page-section-sub">
+                    Keep your regular medications up to date, and check anything
+                    short-term before you take it.
+                  </p>
+                </div>
+                <div className="home-columns">
+                  <div className="home-section">
+                    <div className="section-heading-row">
+                      <h3>Long-term medications</h3>
+                      <InfoTooltip>
+                        Medications you take regularly. These are saved to your
+                        account and checked against anything else you add.
+                      </InfoTooltip>
+                    </div>
+                    {error && <p className="form-error">{error}</p>}
+                    {loading ? (
+                      <p className="med-list-empty">Loading your medications…</p>
+                    ) : (
+                      <MedicationList medications={medications} onRemove={handleRemove} />
+                    )}
+                    <AddMedication onAdd={handleAdd} />
+                  </div>
+
+                  <div className="home-section">
+                    <OneTimeMedicationCheck currentMedications={medications} />
+                  </div>
+                </div>
+              </section>
+
+              <section id="caregiver-access" className="page-section">
+                <div className="page-section-head">
+                  <h2>Caregiver access</h2>
+                  <p className="page-section-sub">
+                    Let someone you trust view your medication list without
+                    being able to change it.
+                  </p>
+                </div>
+                <div className="home-section home-section-quiet">
+                  <CaregiverAccessCard userEmail={user?.email} />
+                </div>
+              </section>
+
+              {isRealUser && (
+                <section id="assistant-memory" className="page-section">
+                  <div className="page-section-head">
+                    <div className="section-heading-row">
+                      <h2>Your assistant remembers</h2>
+                      <InfoTooltip>
+                        Backboard-backed persistent memory — your medications
+                        and any flagged interactions are remembered here
+                        automatically, and you can add your own notes (like an
+                        allergy) too.
+                      </InfoTooltip>
+                    </div>
+                  </div>
+                  <div className="home-section home-section-quiet">
+                    <AssistantMemory userId={user.id} />
+                  </div>
+                </section>
+              )}
+            </div>
+          )}
+        </div>
+      </main>
+
+      <SiteFooter />
     </div>
   )
 }

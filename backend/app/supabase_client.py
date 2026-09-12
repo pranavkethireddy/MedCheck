@@ -11,6 +11,7 @@ Every endpoint that touches the DB must still filter by the `userId` it
 receives in the request — the DB won't do that filtering for us anymore.
 """
 
+from __future__ import annotations
 import os
 from supabase import create_client, Client
 

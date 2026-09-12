@@ -1,51 +1,18 @@
-// TODO: once your backend has a real interaction-check endpoint (calling
-// RxNav's interaction API, per the project plan), replace MOCK_INTERACTIONS
-// and checkInteractions() below with a real fetch, something like:
-//
-//   async function checkInteractions(medications) {
-//     const rxcuis = medications.map((m) => m.rxcui).join('+')
-//     const res = await fetch(`${BACKEND_URL}/check-interactions?rxcuis=${rxcuis}`)
-//     return res.json() // expected: [{ drugs: [...], severity, description }, ...]
-//   }
-//
-// Until then, this hardcoded list lets you build + demo the whole flow.
-const MOCK_INTERACTIONS = [
-  {
-    drugs: ['Warfarin', 'Ibuprofen'],
-    severity: 'significant',
-    description:
-      "Taking these together can raise the risk of serious bleeding. Worth flagging to your doctor before combining them.",
-    questions: [
-      'Is there a safer pain reliever I can take instead of ibuprofen?',
-      'Should I watch for any specific warning signs?',
-    ],
-  },
-  {
-    drugs: ['Tramadol', 'Sertraline'],
-    severity: 'significant',
-    description:
-      'This combination can increase the risk of serotonin syndrome, a rare but serious reaction.',
-    questions: [
-      'Is this combination safe at my current doses?',
-      'What symptoms would mean I should seek care right away?',
-    ],
-  },
-  {
-    drugs: ['Lisinopril', 'Ibuprofen'],
-    severity: 'minor',
-    description:
-      "NSAIDs like ibuprofen can make blood pressure medication less effective if used regularly.",
-  },
-]
+import { useEffect, useState } from 'react'
+import { checkInteractions } from './backendClient.js'
 
-const SEVERITY_RANK = { significant: 2, minor: 1 }
-const SEVERITY_LABEL = { significant: 'Significant — talk to your provider', minor: 'Minor — be aware' }
+// Real interaction check, wired to the backend:
+//   - severity + raw "description" come from Backend Person 1's
+//     curated-list / openFDA check-interactions logic
+//   - "explanation" is Backend Person 2's Gemini rewrite of that
+//     description into plain, calm language (falls back to the raw
+//     description if Gemini failed or GEMINI_API_KEY isn't set — see
+//     gemini_client.py's _safe_explain)
+// Re-checks automatically whenever `medications` changes (add or remove).
 
-function checkInteractions(medications) {
-  const names = medications.map((m) => m.name)
-  return MOCK_INTERACTIONS.filter((interaction) =>
-    interaction.drugs.every((drug) => names.includes(drug))
-  ).sort((a, b) => SEVERITY_RANK[b.severity] - SEVERITY_RANK[a.severity])
+const SEVERITY_LABEL = {
+  significant: 'Significant — talk to your provider',
+  minor: 'Minor — be aware',
 }
 
 function ShieldIcon() {
@@ -63,6 +30,39 @@ function ShieldIcon() {
 }
 
 function InteractionResults({ medications }) {
+  const [interactions, setInteractions] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (medications.length < 2) {
+      setInteractions([])
+      setError('')
+      return
+    }
+
+    let cancelled = false
+    setLoading(true)
+    setError('')
+
+    const drugs = medications.map((m) => ({ rxcui: m.rxcui, name: m.name }))
+    checkInteractions(drugs)
+      .then((results) => {
+        if (!cancelled) setInteractions(results || [])
+      })
+      .catch((err) => {
+        console.error('Failed to check interactions:', err.message)
+        if (!cancelled) setError("Couldn't check interactions right now.")
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [medications])
+
   if (medications.length < 2) {
     return (
       <div className="interactions-empty-wrap">
@@ -74,40 +74,46 @@ function InteractionResults({ medications }) {
     )
   }
 
-  const flagged = checkInteractions(medications)
+  if (loading) {
+    return (
+      <div className="interactions-empty-wrap">
+        <span className="med-icon-bubble med-icon-bubble-muted">
+          <ShieldIcon />
+        </span>
+        <p>Checking interactions…</p>
+      </div>
+    )
+  }
 
-  if (flagged.length === 0) {
+  if (error) {
+    return <p className="form-error">{error}</p>
+  }
+
+  if (interactions.length === 0) {
     return (
       <div className="interactions-empty-wrap">
         <span className="med-icon-bubble med-icon-bubble-safe">
           <ShieldIcon />
         </span>
-        <p>No known interactions among your current medications (based on this demo's sample data).</p>
+        <p>No known interactions found among your current medications.</p>
       </div>
     )
   }
 
   return (
     <ul className="interaction-list">
-      {flagged.map((interaction) => (
+      {interactions.map((interaction, i) => (
         <li
-          key={interaction.drugs.join('-')}
+          key={i}
           className={`interaction-item interaction-${interaction.severity}`}
         >
-          <span className="interaction-badge">{SEVERITY_LABEL[interaction.severity]}</span>
+          <span className="interaction-badge">
+            {SEVERITY_LABEL[interaction.severity] || interaction.severity}
+          </span>
           <p className="interaction-drugs">{interaction.drugs.join(' + ')}</p>
-          <p className="interaction-description">{interaction.description}</p>
-
-          {interaction.questions && (
-            <div className="interaction-questions">
-              <p className="interaction-questions-title">Questions to ask your provider:</p>
-              <ul>
-                {interaction.questions.map((q) => (
-                  <li key={q}>{q}</li>
-                ))}
-              </ul>
-            </div>
-          )}
+          <p className="interaction-description">
+            {interaction.explanation || interaction.description}
+          </p>
         </li>
       ))}
     </ul>

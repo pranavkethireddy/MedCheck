@@ -1,4 +1,5 @@
 import { formatTime, timeToMinutes } from './timing.js'
+import BorderGlow from './components/BorderGlow.jsx'
 
 function PillIcon() {
   return (
@@ -45,10 +46,6 @@ function ShieldIcon() {
   )
 }
 
-// "It's currently 3:15pm and you take meds at 8am and 8pm" -> the 8pm one,
-// formatted, with how far off it is. Falls back to "earliest tomorrow"
-// once every timed dose today has already passed, so this never just goes
-// blank for the rest of the day.
 function findNextDose(medications) {
   const timed = (medications || [])
     .map((m) => ({ med: m, minutes: timeToMinutes(m.timeOfDay) }))
@@ -71,12 +68,6 @@ function findNextDose(medications) {
   return { med: earliest.med, whenLabel: `${formatTime(earliest.med.timeOfDay)} tomorrow` }
 }
 
-// A quick-glance row of four numbers above the fold — the kind of thing a
-// real dashboard leads with, instead of making someone read a single
-// sentence to find out how many medications they have on file. Every
-// number here is derived straight from state App.jsx already has
-// (medications, interactions from the already-lifted useInteractionCheck)
-// — no new network calls.
 function DashboardStats({ medications, interactions, loading }) {
   const significant = interactions.filter((i) => i.severity === 'significant').length
   const minor = interactions.filter((i) => i.severity === 'minor').length
@@ -97,46 +88,61 @@ function DashboardStats({ medications, interactions, loading }) {
     }
   }
 
+  const glowProps = {
+    backgroundColor: '#0F1A1A',
+    borderRadius: 16,
+    colors: ['#2DD4BF', '#14B8A6', '#5EEAD4'],
+    glowColor: '170 80 70',
+  }
+
   return (
     <div className="stat-grid">
-      <div className="stat-card">
-        <span className="stat-card-icon">
-          <PillIcon />
-        </span>
-        <p className="stat-card-value">{medications.length}</p>
-        <p className="stat-card-label">Medication{medications.length === 1 ? '' : 's'} tracked</p>
-      </div>
+      <BorderGlow {...glowProps}>
+        <div className="stat-card">
+          <span className="stat-card-icon">
+            <PillIcon />
+          </span>
+          <p className="stat-card-value">{medications.length}</p>
+          <p className="stat-card-label">Medication{medications.length === 1 ? '' : 's'} tracked</p>
+        </div>
+      </BorderGlow>
 
-      <div className="stat-card">
-        <span className="stat-card-icon">
-          <ClockIcon />
-        </span>
-        <p className="stat-card-value stat-card-value-compact">
-          {nextDose ? nextDose.whenLabel : '—'}
-        </p>
-        <p className="stat-card-label">
-          {nextDose ? `Next dose · ${nextDose.med.name}` : 'No times set yet'}
-        </p>
-      </div>
+      <BorderGlow {...glowProps}>
+        <div className="stat-card">
+          <span className="stat-card-icon">
+            <ClockIcon />
+          </span>
+          <p className="stat-card-value stat-card-value-compact">
+            {nextDose ? nextDose.whenLabel : '—'}
+          </p>
+          <p className="stat-card-label">
+            {nextDose ? `Next dose · ${nextDose.med.name}` : 'No times set yet'}
+          </p>
+        </div>
+      </BorderGlow>
 
-      <div className="stat-card">
-        <span className="stat-card-icon">
-          <LinkIcon />
-        </span>
-        <p className="stat-card-value">{interactions.length}</p>
-        <p className="stat-card-label">
-          Interaction{interactions.length === 1 ? '' : 's'} flagged
-          {interactions.length > 0 && ` (${significant} significant)`}
-        </p>
-      </div>
+      <BorderGlow {...glowProps}>
+        <div className="stat-card">
+          <span className="stat-card-icon">
+            <LinkIcon />
+          </span>
+          <p className="stat-card-value">{interactions.length}</p>
+          <p className="stat-card-label">
+            Interaction{interactions.length === 1 ? '' : 's'} flagged
+            {interactions.length > 0 && ` (${significant} significant)`}
+          </p>
+        </div>
+      </BorderGlow>
 
-      <div className="stat-card">
-        <span className="stat-card-icon">
-          <ShieldIcon />
-        </span>
-        <p className={`stat-chip ${riskClass}`}>{riskLabel}</p>
-        <p className="stat-card-label">Overall risk read</p>
-      </div>
+      <BorderGlow {...glowProps}>
+        <div className="stat-card">
+          <span className="stat-card-icon">
+            <ShieldIcon />
+          </span>
+          <p className={`stat-chip ${riskClass}`}>{riskLabel}</p>
+          <p className="stat-card-label">Overall risk read</p>
+        </div>
+      </BorderGlow>
     </div>
   )
 }

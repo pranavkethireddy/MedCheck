@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import LoginScreen from './LoginScreen.jsx'
+import LandingPage from './LandingPage.jsx'
 import AddMedication from './AddMedication.jsx'
 import MedicationList from './MedicationList.jsx'
 import AIOverviewPage from './AIOverviewPage.jsx'
@@ -22,14 +23,8 @@ import { supabase, isSupabaseConfigured } from './supabaseClient.js'
 import { saveMedication, getMedications, deleteMedication, updateMedicationTime } from './backendClient.js'
 import { readCaregiverCodeFromUrl, clearCaregiverCodeFromUrl } from './caregiverLink.js'
 import { useInteractionCheck } from './useInteractionCheck.js'
+import GhostFibers from './components/GhostFibers'
 
-// Individual mode's nav destinations — each is now a real page (only one
-// rendered at a time) instead of an anchor-scroll target on one long page.
-// Interactions + the body map used to be two separate sections; they're
-// the same underlying data (see InteractionsPage.jsx), so they're combined
-// into one page here. Titles/subtitles for the page-title-band live here so
-// SiteNav, the band, and the footer's link list all agree on the same set
-// of page ids.
 const PAGE_META = {
   overview: {
     sub: 'Everything you take, checked against known interactions — so you know what to bring up with your provider.',
@@ -56,28 +51,14 @@ const PAGE_META = {
 
 function App() {
   const [user, setUser] = useState(null)
-  // Whether we've finished checking for an already-logged-in Supabase
-  // session yet. Starts true so we don't flash LoginScreen for a moment
-  // before the check resolves (or forever, in demo mode, where there's
-  // nothing to check).
+  const [showLanding, setShowLanding] = useState(true)
   const [checkingSession, setCheckingSession] = useState(isSupabaseConfigured)
   const [medications, setMedications] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [mode, setMode] = useState('individual') // 'individual' | 'caregiver'
-  // Which Individual-mode page is showing — see PAGE_META above.
+  const [mode, setMode] = useState('individual')
   const [activeSection, setActiveSection] = useState('overview')
-  // Captured once on first render — a code scanned from a QR code (see
-  // caregiverLink.js). Read synchronously so it survives the LoginScreen
-  // round trip (the URL param is cleared once it's actually been applied,
-  // in the effect below).
   const [pendingCaregiverCode] = useState(() => readCaregiverCodeFromUrl())
-  // Supabase reports a failed OAuth attempt (e.g. Google sign-in wasn't
-  // actually enabled yet, or the person cancelled at Google's screen) by
-  // redirecting back with #error=...&error_description=... in the URL
-  // hash, rather than as a normal onAuthStateChange event — so it needs
-  // its own read here, once, rather than going unnoticed as a silent
-  // "nothing happened" on the login screen.
   const [oauthError] = useState(() => {
     const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''))
     const description = hash.get('error_description')
@@ -88,26 +69,12 @@ function App() {
     return ''
   })
 
-  // `user.id` only exists when LoginScreen did a REAL Supabase login (see
-  // supabaseClient.js's isSupabaseConfigured) — the fallback demo login
-  // only ever gives us { email }. Everything below treats "no user.id" as
-  // "stay purely local," so the app still works with nothing configured.
   const isRealUser = Boolean(user?.id)
 
-  // Computed once here (rather than only inside whichever page happens to
-  // be mounted) so the print button — which lives in the page-title-band,
-  // above/outside any individual page — always has real interaction data
-  // for the PDF summary, no matter which page is currently open.
   const { interactions } = useInteractionCheck(medications)
 
-  // Restore an existing Supabase session on load (page refresh, reopening
-  // the tab, etc.) instead of forcing a fresh login every time. Supabase
-  // already persists the session token in localStorage by default — this
-  // is just the piece that actually reads it back on mount. Also keeps
-  // `user` in sync if the token refreshes or the session ends elsewhere
-  // (e.g. logged out in another tab), until handleLogout is called here.
   useEffect(() => {
-    if (!isSupabaseConfigured) return // demo mode: nothing to restore
+    if (!isSupabaseConfigured) return
 
     let cancelled = false
 
@@ -131,7 +98,6 @@ function App() {
     }
   }, [])
 
-  // Load this user's saved medications once they're really logged in.
   useEffect(() => {
     if (!isRealUser) return
 
@@ -157,10 +123,6 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id])
 
-  // Someone scanned a caregiver's QR code — once they're actually logged
-  // in, jump straight to Caregiver mode with the code ready to go, then
-  // scrub the URL so a refresh (or logging out and back in later) doesn't
-  // keep re-triggering this.
   useEffect(() => {
     if (!user || !pendingCaregiverCode) return
     setMode('caregiver')
@@ -168,21 +130,11 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, pendingCaregiverCode])
 
-  // On narrow screens the login/signup panel stacks and can scroll well
-  // past a full screen's height (see .auth-page's <800px breakpoint) — if
-  // the browser was scrolled down to reach the submit button, that same
-  // scroll position otherwise carries straight into the logged-in view,
-  // making the sticky nav appear to overlap the hero band. Snap back to
-  // the top the moment a real login/session-restore completes.
   useEffect(() => {
     if (user) window.scrollTo(0, 0)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [Boolean(user)])
 
-  // Each nav destination is now its own page rather than a scroll target,
-  // so switching pages should feel like a real navigation — jump back to
-  // the top instead of leaving the scroll position wherever the previous,
-  // possibly much longer or shorter, page left it.
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [activeSection, mode])
@@ -195,17 +147,18 @@ function App() {
     )
   }
 
-  if (!user) {
+    if (!user) {
+    if (showLanding) {
+      return <LandingPage onGetStarted={() => setShowLanding(false)} />
+    }
     return <LoginScreen onLoggedIn={setUser} initialError={oauthError} />
   }
 
   async function handleAdd(drug) {
-    if (medications.some((m) => m.rxcui === drug.rxcui)) return // no duplicates
+    if (medications.some((m) => m.rxcui === drug.rxcui)) return
     setError('')
 
     if (!isRealUser) {
-      // Demo mode (no real Supabase project configured yet) — keep it
-      // purely local, exactly like before.
       setMedications((prev) => [...prev, drug])
       return
     }
@@ -217,8 +170,6 @@ function App() {
         rxcui: drug.rxcui,
         timeOfDay: drug.timeOfDay,
       })
-      // Fall back to the locally-entered time if the backend doesn't
-      // return/store it yet — keeps the badge showing either way.
       setMedications((prev) => [...prev, { ...saved, timeOfDay: saved.timeOfDay ?? drug.timeOfDay }])
     } catch (err) {
       console.error('Failed to save medication:', err.message)
@@ -231,17 +182,16 @@ function App() {
     if (!target) return
     setError('')
 
-    // Optimistic removal so the UI feels instant either way.
     setMedications((prev) => prev.filter((m) => (m.id ?? m.rxcui) !== key))
 
-    if (!isRealUser || !target.id) return // demo-mode entry — nothing to delete on the backend
+    if (!isRealUser || !target.id) return
 
     try {
       await deleteMedication({ id: target.id, userId: user.id })
     } catch (err) {
       console.error('Failed to delete medication:', err.message)
       setError(`Couldn't remove ${target.name} — putting it back.`)
-      setMedications((prev) => [...prev, target]) // roll back so state matches what's really saved
+      setMedications((prev) => [...prev, target])
     }
   }
 
@@ -252,12 +202,11 @@ function App() {
 
     const previousTime = target.timeOfDay ?? null
 
-    // Optimistic update so the UI feels instant either way.
     setMedications((prev) =>
       prev.map((m) => ((m.id ?? m.rxcui) === key ? { ...m, timeOfDay } : m))
     )
 
-    if (!isRealUser || !target.id) return // demo-mode entry — nothing to persist on the backend
+    if (!isRealUser || !target.id) return
 
     try {
       await updateMedicationTime({ id: target.id, userId: user.id, timeOfDay })
@@ -279,6 +228,7 @@ function App() {
     setError('')
     setMode('individual')
     setActiveSection('overview')
+    setShowLanding(true)
   }
 
   function handleModeChange(nextMode) {
@@ -286,18 +236,9 @@ function App() {
     setActiveSection('overview')
   }
 
-  // Real name collected at signup (Supabase email/password: user_metadata.name;
-  // Google sign-in: Supabase populates user_metadata.full_name — and
-  // sometimes .name too — from the Google profile instead; demo mode:
-  // user.name — see LoginScreen.jsx). Falls back to the email's local part
-  // for accounts created before this existed, or a demo login that skipped
-  // the signup form entirely.
   const displayName =
     user?.user_metadata?.name || user?.user_metadata?.full_name || user?.name || null
   const firstName = displayName ? displayName.split(' ')[0] : user?.email ? user.email.split('@')[0] : null
-  // Google sign-in — Supabase mirrors the Google profile photo here.
-  // Nothing else sets this, so it's simply absent for email/password and
-  // demo-mode accounts, which already fall back to the initials avatar.
   const avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture || null
 
   const pageTitle =
@@ -320,7 +261,11 @@ function App() {
       : PAGE_META[activeSection]?.sub
 
   return (
-    <div className="site" id="top">
+    <div className="site" id="top" style={{ position: 'relative', background: 'transparent' }}>
+      <div style={{ position: 'absolute', inset: 0, zIndex: -1, pointerEvents: 'none' }}>
+  <GhostFibers lineColor="#0F2E2B" glowColor="#2DD4BF" />
+      </div>
+
       <SiteNav
         mode={mode}
         onModeChange={handleModeChange}

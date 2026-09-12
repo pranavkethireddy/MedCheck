@@ -6,7 +6,7 @@
    dark-themed demo. Every component consumes these tokens rather than
    hardcoded colors, so this block (plus the dark-mode block right below
    it) is the one place the whole visual identity lives. --------------- */
-
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Caveat:wght@600&display=swap');
 :root {
   --bg: #f6f8fb;
   --panel-dark: #0b2a30;
@@ -42,8 +42,9 @@
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 18px;
-  --font-display: "Inter Tight", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Fraunces", "Georgia", serif;
   --font-body: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-cursive: "Caveat", cursive;
 
   color-scheme: light;
   font-family: var(--font-body);
@@ -1862,8 +1863,11 @@ h1, h2, h3 {
 }
 
 .page-title-band h1 {
-  font-size: 2.25rem;
-  line-height: 1.2;
+  font-family: var(--font-display);
+  font-size: 2.35rem;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
   color: var(--ink);
   margin: 0 0 0.6rem;
 }
@@ -3199,4 +3203,81 @@ h1, h2, h3 {
   .site-main {
     padding: 0 !important;
   }
+}
+
+.landing-page {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #0f2e2b;
+}
+
+.landing-page-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.landing-page-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.25rem;
+  padding: 2rem;
+}
+
+.landing-page-logo {
+  width: 72px;
+  height: 72px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  margin-bottom: 1rem;
+}
+
+.landing-page-logo svg {
+  width: 38px;
+  height: 38px;
+}
+
+.landing-page-title {
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.landing-page-tagline {
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.75);
+  margin: 0.5rem 0 2rem;
+}
+
+.landing-get-started-btn {
+  padding: 0.85rem 2.4rem;
+  border-radius: 999px;
+  border: none;
+  background: #2dd4bf;
+  color: #0f2e2b;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 10px 30px -10px rgba(45, 212, 191, 0.65);
+}
+
+.landing-get-started-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 36px -10px rgba(45, 212, 191, 0.8);
 }

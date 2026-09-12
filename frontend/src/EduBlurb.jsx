@@ -1,3 +1,5 @@
+import BorderGlow from './components/BorderGlow.jsx'
+
 function BulbIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -12,22 +14,24 @@ function BulbIcon() {
   )
 }
 
-// A short, quiet explainer block dropped into a page where a little
-// context helps — "why timing matters," "how we check interactions" — the
-// kind of thing that makes a page feel like it was written for a person
-// rather than just a data dump. Deliberately plain-text prose, not another
-// card competing for attention.
 function EduBlurb({ title, children }) {
   return (
-    <div className="edu-blurb">
-      <span className="edu-blurb-icon">
-        <BulbIcon />
-      </span>
-      <div>
-        <p className="edu-blurb-title">{title}</p>
-        <p className="edu-blurb-copy">{children}</p>
+    <BorderGlow
+      backgroundColor="#0F1A1A"
+      borderRadius={14}
+      colors={['#2DD4BF', '#14B8A6', '#5EEAD4']}
+      glowColor="170 80 70"
+    >
+      <div className="edu-blurb">
+        <span className="edu-blurb-icon">
+          <BulbIcon />
+        </span>
+        <div>
+          <p className="edu-blurb-title">{title}</p>
+          <p className="edu-blurb-copy">{children}</p>
+        </div>
       </div>
-    </div>
+    </BorderGlow>
   )
 }
 

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import bodyOutlineSrc from './assets/body-outline.png'
 
 // Visual companion to InteractionResults: same interaction data, pinned onto
 // a body outline instead of a list, so it's obvious at a glance *where* a
@@ -12,15 +13,19 @@ import { useState } from 'react'
 // placement of each region on the drawing; the backend only ever needs to
 // say *which* region, never coordinates, so the drawing can be tweaked here
 // without touching the backend.
+// Coordinates measured directly off assets/body-outline.png (a plain
+// pixel-analysis pass — find each landmark's actual pixel position, then
+// verify by drawing markers back onto a copy of the image) rather than
+// guessed, so pins land on the right part of *this* figure specifically.
 const REGION_META = {
-  brain: { label: 'Brain / nervous system', x: 50, y: 8 },
-  thyroid: { label: 'Thyroid', x: 50, y: 17 },
-  lungs: { label: 'Lungs / breathing', x: 50, y: 27 },
-  heart: { label: 'Heart', x: 42, y: 29 },
-  stomach: { label: 'Stomach / GI tract', x: 50, y: 42 },
-  kidneys: { label: 'Kidneys', x: 50, y: 47 },
-  blood: { label: 'Bloodstream / bleeding risk', x: 26, y: 55 },
-  muscle: { label: 'Muscles', x: 50, y: 75 },
+  brain: { label: 'Brain / nervous system', x: 50, y: 12 },
+  thyroid: { label: 'Thyroid', x: 50, y: 19 },
+  lungs: { label: 'Lungs / breathing', x: 50, y: 30 },
+  heart: { label: 'Heart', x: 44, y: 33 },
+  stomach: { label: 'Stomach / GI tract', x: 50, y: 44 },
+  kidneys: { label: 'Kidneys', x: 58, y: 48 },
+  blood: { label: 'Bloodstream / bleeding risk', x: 34, y: 50 },
+  muscle: { label: 'Muscles', x: 46, y: 72 },
 }
 const FALLBACK_REGION = 'blood'
 
@@ -44,39 +49,12 @@ function worstSeverity(group) {
   )
 }
 
-// Plain, front-facing body outline — intentionally simple (no medical
-// illustration license needed, renders crisp at any size).
+// Front-facing body outline (assets/body-outline.png), sized to fill the
+// figure box exactly — REGION_META's percentages are measured against this
+// image's actual proportions, so the image and the coordinates have to
+// move together if either changes.
 function BodyOutline() {
-  return (
-    <svg viewBox="0 0 100 100" className="body-outline" aria-hidden="true">
-      <ellipse cx="50" cy="7" rx="7" ry="7.5" />
-      <path d="M44 13 h12 v6 h-12 z" />
-      <path
-        d="M32 20
-           q18 -6 36 0
-           l4 20
-           q-4 3 -9 2
-           l-2 -9
-           v34
-           q0 5 -5 5
-           h-3
-           q-3 0 -3 -4
-           v-24
-           h-2
-           v24
-           q0 4 -3 4
-           h-3
-           q-5 0 -5 -5
-           v-34
-           l-2 9
-           q-5 1 -9 -2 z"
-      />
-      <path d="M22 40 l-6 22 q-1 3 2 4 q3 1 4 -2 l7 -21 z" />
-      <path d="M78 40 l6 22 q1 3 -2 4 q-3 1 -4 -2 l-7 -21 z" />
-      <path d="M40 78 h8 l1 16 q0 2 -2 2 h-4 q-2 0 -2 -2 z" />
-      <path d="M60 78 h-8 l-1 16 q0 2 2 2 h4 q2 0 2 -2 z" />
-    </svg>
-  )
+  return <img src={bodyOutlineSrc} className="body-outline" alt="" aria-hidden="true" />
 }
 
 function BodyMap({ interactions, loading, error, minMedications }) {

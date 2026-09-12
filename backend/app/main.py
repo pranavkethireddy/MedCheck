@@ -23,6 +23,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from app.drug_name_utils import normalize_drug_name
+from app.gemini_client import explain_interactions
 from app.known_interactions import lookup_known_interaction
 from app.mock_data import MOCK_PATIENTS
 from app.openfda_client import fetch_label_sections, find_mention
@@ -263,14 +264,14 @@ def _resolve_names(drugs: List[dict]) -> List[dict]:
 def check_interactions(drugs: List[dict]) -> list:
     resolved = _resolve_names(drugs)
     entries = [(d["rxcui"], d["name"], normalize_drug_name(d["name"])) for d in resolved]
-
+ 
     label_cache: dict = {}
-
+ 
     def get_label(norm_name):
         if norm_name not in label_cache:
             label_cache[norm_name] = fetch_label_sections(norm_name) if norm_name else {}
         return label_cache[norm_name]
-
+ 
     interactions = []
     for i in range(len(entries)):
         for j in range(i + 1, len(entries)):
@@ -278,7 +279,7 @@ def check_interactions(drugs: List[dict]) -> list:
             _, name_j, norm_j = entries[j]
             if not norm_i or not norm_j:
                 continue
-
+ 
             curated = lookup_known_interaction(norm_i, norm_j)
             if curated:
                 interactions.append(
@@ -290,13 +291,13 @@ def check_interactions(drugs: List[dict]) -> list:
                     }
                 )
                 continue
-
+ 
             match = find_mention(get_label(norm_i), norm_j)
             matched_label_drug, matched_other_drug = name_i, name_j
             if not match:
                 match = find_mention(get_label(norm_j), norm_i)
                 matched_label_drug, matched_other_drug = name_j, name_i
-
+ 
             if match:
                 section_name, severity, snippet = match
                 interactions.append(
@@ -311,8 +312,10 @@ def check_interactions(drugs: List[dict]) -> list:
                         "evidence": snippet,
                     }
                 )
-
-    return sort_interactions_by_severity(interactions)
+ 
+    sorted_interactions = sort_interactions_by_severity(interactions)
+    return explain_interactions(sorted_interactions)
+    
 
 
 @app.api_route("/api/check-interactions", methods=["GET", "POST"])

@@ -3,6 +3,8 @@ import LoginScreen from './LoginScreen.jsx'
 import AddMedication from './AddMedication.jsx'
 import MedicationList from './MedicationList.jsx'
 import InteractionResults from './InteractionResults.jsx'
+import BodyMap from './BodyMap.jsx'
+import AssistantMemory from './AssistantMemory.jsx'
 import CaregiverAccessCard from './CaregiverAccessCard.jsx'
 import CaregiverMode from './CaregiverMode.jsx'
 import OneTimeMedicationCheck from './OneTimeMedicationCheck.jsx'
@@ -10,11 +12,16 @@ import InfoTooltip from './InfoTooltip.jsx'
 import StatusBanner from './StatusBanner.jsx'
 import SiteNav from './SiteNav.jsx'
 import SiteFooter from './SiteFooter.jsx'
-import { supabase } from './supabaseClient.js'
+import { supabase, isSupabaseConfigured } from './supabaseClient.js'
 import { saveMedication, getMedications, deleteMedication } from './backendClient.js'
 
 function App() {
   const [user, setUser] = useState(null)
+  // Whether we've finished checking for an already-logged-in Supabase
+  // session yet. Starts true so we don't flash LoginScreen for a moment
+  // before the check resolves (or forever, in demo mode, where there's
+  // nothing to check).
+  const [checkingSession, setCheckingSession] = useState(isSupabaseConfigured)
   const [medications, setMedications] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -25,6 +32,37 @@ function App() {
   // only ever gives us { email }. Everything below treats "no user.id" as
   // "stay purely local," so the app still works with nothing configured.
   const isRealUser = Boolean(user?.id)
+
+  // Restore an existing Supabase session on load (page refresh, reopening
+  // the tab, etc.) instead of forcing a fresh login every time. Supabase
+  // already persists the session token in localStorage by default — this
+  // is just the piece that actually reads it back on mount. Also keeps
+  // `user` in sync if the token refreshes or the session ends elsewhere
+  // (e.g. logged out in another tab), until handleLogout is called here.
+  useEffect(() => {
+    if (!isSupabaseConfigured) return // demo mode: nothing to restore
+
+    let cancelled = false
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (cancelled) return
+      if (data.session?.user) setUser(data.session.user)
+      setCheckingSession(false)
+    })
+
+    const { data: subscription } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') {
+        setUser(null)
+      } else if (session?.user) {
+        setUser(session.user)
+      }
+    })
+
+    return () => {
+      cancelled = true
+      subscription.subscription.unsubscribe()
+    }
+  }, [])
 
   // Load this user's saved medications once they're really logged in.
   useEffect(() => {
@@ -51,6 +89,14 @@ function App() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id])
+
+  if (checkingSession) {
+    return (
+      <div className="placeholder-page">
+        <p className="med-list-empty">Loading…</p>
+      </div>
+    )
+  }
 
   if (!user) {
     return <LoginScreen onLoggedIn={setUser} />
@@ -171,6 +217,23 @@ function App() {
                 </section>
               )}
 
+              {medications.length >= 2 && (
+                <section id="body-map" className="page-section">
+                  <div className="page-section-head">
+                    <div className="section-heading-row">
+                      <h2>Where it happens</h2>
+                      <InfoTooltip>
+                        The same interactions above, pinned to roughly where in
+                        the body they show up — hover or tap a pin for details.
+                      </InfoTooltip>
+                    </div>
+                  </div>
+                  <div className="home-section">
+                    <BodyMap medications={medications} />
+                  </div>
+                </section>
+              )}
+
               <section id="medications" className="page-section">
                 <div className="page-section-head">
                   <h2>Manage what you take</h2>
@@ -215,6 +278,25 @@ function App() {
                   <CaregiverAccessCard userEmail={user?.email} />
                 </div>
               </section>
+
+              {isRealUser && (
+                <section id="assistant-memory" className="page-section">
+                  <div className="page-section-head">
+                    <div className="section-heading-row">
+                      <h2>Your assistant remembers</h2>
+                      <InfoTooltip>
+                        Backboard-backed persistent memory — your medications
+                        and any flagged interactions are remembered here
+                        automatically, and you can add your own notes (like an
+                        allergy) too.
+                      </InfoTooltip>
+                    </div>
+                  </div>
+                  <div className="home-section home-section-quiet">
+                    <AssistantMemory userId={user.id} />
+                  </div>
+                </section>
+              )}
             </div>
           )}
         </div>

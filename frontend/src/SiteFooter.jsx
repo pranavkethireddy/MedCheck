@@ -32,10 +32,16 @@ function SiteFooter() {
                 <a href="#interactions">Interaction check</a>
               </li>
               <li>
+                <a href="#body-map">Body map</a>
+              </li>
+              <li>
                 <a href="#medications">My medications</a>
               </li>
               <li>
                 <a href="#caregiver-access">Caregiver access</a>
+              </li>
+              <li>
+                <a href="#assistant-memory">Assistant memory</a>
               </li>
             </ul>
           </div>

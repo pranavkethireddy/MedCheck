@@ -1,16 +1,11 @@
-// TODO: once your backend has a real interaction-check endpoint (calling
-// RxNav's interaction API, per the project plan), replace MOCK_INTERACTIONS
-// and checkInteractions() below with a real fetch, something like:
-//
-//   export async function checkInteractions(medications) {
-//     const rxcuis = medications.map((m) => m.rxcui).join('+')
-//     const res = await fetch(`${BACKEND_URL}/check-interactions?rxcuis=${rxcuis}`)
-//     return res.json() // expected: [{ drugs: [...], severity, description }, ...]
-//   }
-//
-// InteractionResults.jsx (checks the whole long-term list against itself)
-// and OneTimeMedicationCheck.jsx (checks one new drug against that list)
-// both import from here, so there's one interaction dataset to keep in sync.
+// The real interaction check is backendClient.js's checkInteractions(),
+// backed by Backend Person 1's curated-list + openFDA logic — see
+// useInteractionCheck.js, which every component that needs an interaction
+// check goes through. MOCK_INTERACTIONS and mockCheckInteractions() below
+// are that hook's fallback for when the backend is unreachable, same
+// philosophy as AddMedication.jsx's drug-search fallback. SEVERITY_LABEL is
+// still used directly by every component that renders a severity badge,
+// real result or mock.
 export const MOCK_INTERACTIONS = [
   {
     drugs: ['Warfarin', 'Ibuprofen'],
@@ -52,7 +47,7 @@ export const SEVERITY_LABEL = {
   minor: 'Minor — be aware',
 }
 
-export function checkInteractions(medications) {
+export function mockCheckInteractions(medications) {
   const names = medications.map((m) => m.name)
   return MOCK_INTERACTIONS.filter((interaction) =>
     interaction.drugs.every((drug) => names.includes(drug))

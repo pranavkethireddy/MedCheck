@@ -123,6 +123,29 @@ def main():
 
     check("check_interactions finds warfarin+ibuprofen via the curated list, no network", _t7)
 
+    from app.body_map import classify_region, VALID_REGIONS
+
+    def _t7b():
+        interactions = check_interactions(
+            [
+                {"rxcui": "11289", "name": "Warfarin"},
+                {"rxcui": "5640", "name": "Ibuprofen"},
+            ]
+        )
+        assert interactions[0]["region"] == "blood", interactions
+
+    check("check_interactions tags the curated warfarin+ibuprofen pair with a body region", _t7b)
+
+    def _t7c():
+        assert classify_region("increased risk of bleeding and easy bruising") == "blood"
+        assert classify_region("may cause serotonin syndrome and confusion") == "brain"
+        assert classify_region("reduced renal clearance") == "kidneys"
+        # Never crashes and always returns one of the known regions, even
+        # for text with no recognizable keywords at all.
+        assert classify_region("completely unrelated jibberish text") in VALID_REGIONS | {"blood"}
+
+    check("classify_region maps label text to a sensible body region, with a safe fallback", _t7c)
+
     print("\n--- 3. Live RxNorm/openFDA calls (network; skipped if unreachable) ---")
 
     from app.main import search_drugs
@@ -276,6 +299,37 @@ def main():
         assert resp.status_code == 405, resp.text
 
     check("Unsupported method (DELETE) on /api/mock-patients returns 405", _t21)
+
+    print("\n--- 5. Backboard memory endpoints (no BACKBOARD_API_KEY needed) ---")
+
+    def _t22():
+        resp = client.post("/api/memory/save", json={"userId": "u1"})
+        assert resp.status_code == 400, resp.text
+
+    check("POST /api/memory/save with missing fields returns 400", _t22)
+
+    def _t23():
+        resp = client.get("/api/memory/list")
+        assert resp.status_code == 400, resp.text
+
+    check("GET /api/memory/list with no ?userId returns 400", _t23)
+
+    def _t24():
+        # No BACKBOARD_API_KEY set in this sandbox — remember() must no-op
+        # rather than raising, so saving still reports success (the save
+        # itself just silently doesn't happen anywhere).
+        resp = client.post("/api/memory/save", json={"userId": "u1", "content": "Allergic to penicillin"})
+        assert resp.status_code == 201, resp.text
+        assert resp.json() == {"saved": True}
+
+    check("POST /api/memory/save degrades gracefully with no BACKBOARD_API_KEY configured", _t24)
+
+    def _t25():
+        resp = client.get("/api/memory/list", params={"userId": "u1"})
+        assert resp.status_code == 200, resp.text
+        assert resp.json() == {"memories": []}
+
+    check("GET /api/memory/list degrades gracefully (empty list) with no BACKBOARD_API_KEY configured", _t25)
 
     print(f"\n{passed} passed, {failed} failed, {skipped} skipped\n")
     sys.exit(1 if failed > 0 else 0)

@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { searchMedications } from './medicationSearch.js'
-import { checkInteractions, SEVERITY_LABEL } from './interactionData.js'
+import { useDrugSearch } from './useDrugSearch.js'
+import { useInteractionCheck } from './useInteractionCheck.js'
+import { SEVERITY_LABEL } from './interactionData.js'
 import { hoursApart } from './timing.js'
 import InfoTooltip from './InfoTooltip.jsx'
 
@@ -19,27 +20,30 @@ function SearchIcon() {
 // App.jsx, to check against.
 function OneTimeMedicationCheck({ currentMedications }) {
   const [query, setQuery] = useState('')
-  const [suggestions, setSuggestions] = useState([])
   const [timeOfDay, setTimeOfDay] = useState('')
   const [checkedDrug, setCheckedDrug] = useState(null)
+  const { suggestions, usingFallback: searchFallback } = useDrugSearch(query)
+
+  // Only run a check once a drug has actually been picked — otherwise this
+  // would needlessly re-check the long-term list against itself on every
+  // keystroke.
+  const combined = checkedDrug ? [...currentMedications, checkedDrug] : []
+  const { interactions, loading, usingFallback: checkFallback } = useInteractionCheck(combined)
 
   function handleChange(e) {
     const value = e.target.value
     setQuery(value)
-    setSuggestions(searchMedications(value))
     setCheckedDrug(null) // clear any previous result once they start a new search
   }
 
   function handlePick(drug) {
     setCheckedDrug({ ...drug, timeOfDay: timeOfDay || null })
     setQuery(drug.name)
-    setSuggestions([])
   }
 
   function handleReset() {
     setCheckedDrug(null)
     setQuery('')
-    setSuggestions([])
     setTimeOfDay('')
   }
 
@@ -48,7 +52,7 @@ function OneTimeMedicationCheck({ currentMedications }) {
   // Also work out the timing gap against whichever long-term medication
   // it's flagged with, if both have a time set.
   const flagged = checkedDrug
-    ? checkInteractions([...currentMedications, checkedDrug])
+    ? interactions
         .filter((i) => i.drugs.includes(checkedDrug.name))
         .map((interaction) => {
           const otherName = interaction.drugs.find((d) => d !== checkedDrug.name)
@@ -89,7 +93,7 @@ function OneTimeMedicationCheck({ currentMedications }) {
         className="add-med-time-input"
       />
 
-      {suggestions.length > 0 && (
+      {!checkedDrug && suggestions.length > 0 && (
         <ul className="suggestion-list">
           {suggestions.map((drug) => (
             <li key={drug.rxcui}>
@@ -104,9 +108,17 @@ function OneTimeMedicationCheck({ currentMedications }) {
         </ul>
       )}
 
+      {!checkedDrug && searchFallback && query && (
+        <p className="suggestion-empty">
+          (Backend unreachable — showing a small built-in demo list instead.)
+        </p>
+      )}
+
       {checkedDrug && (
         <div className="one-time-result">
-          {currentMedications.length === 0 ? (
+          {loading ? (
+            <p className="interactions-empty-wrap-inline">Checking {checkedDrug.name}…</p>
+          ) : currentMedications.length === 0 ? (
             <p className="interactions-empty-wrap-inline">
               You don't have any long-term medications saved yet, so there's
               nothing to check {checkedDrug.name} against.
@@ -114,18 +126,20 @@ function OneTimeMedicationCheck({ currentMedications }) {
           ) : flagged.length === 0 ? (
             <p className="one-time-result-clear">
               No known interaction between {checkedDrug.name} and your
-              long-term medications (based on this demo's sample data).
+              long-term medications.
             </p>
           ) : (
             <ul className="interaction-list">
-              {flagged.map((interaction) => (
+              {flagged.map((interaction, i) => (
                 <li
-                  key={interaction.drugs.join('-')}
+                  key={interaction.drugs.join('-') + i}
                   className={`interaction-item interaction-${interaction.severity}`}
                 >
                   <span className="interaction-badge">{SEVERITY_LABEL[interaction.severity]}</span>
                   <p className="interaction-drugs">{interaction.drugs.join(' + ')}</p>
-                  <p className="interaction-description">{interaction.description}</p>
+                  <p className="interaction-description">
+                    {interaction.explanation || interaction.description}
+                  </p>
                   {interaction.gap != null && (
                     <p className="interaction-timing">
                       You're taking these about {interaction.gap} hour{interaction.gap === 1 ? '' : 's'} apart.
@@ -136,6 +150,12 @@ function OneTimeMedicationCheck({ currentMedications }) {
                 </li>
               ))}
             </ul>
+          )}
+
+          {checkFallback && (
+            <p className="suggestion-empty">
+              (Backend unreachable — showing results from a small built-in demo list instead.)
+            </p>
           )}
 
           <p className="one-time-note">

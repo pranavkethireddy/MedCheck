@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { searchMedications } from './medicationSearch.js'
+import { useDrugSearch } from './useDrugSearch.js'
 
 function SearchIcon() {
   return (
@@ -12,23 +12,16 @@ function SearchIcon() {
 
 function AddMedication({ onAdd }) {
   const [query, setQuery] = useState('')
-  const [suggestions, setSuggestions] = useState([])
   const [timeOfDay, setTimeOfDay] = useState('')
+  const { suggestions, usingFallback } = useDrugSearch(query)
 
   function handleChange(e) {
-    const value = e.target.value
-    setQuery(value)
-    setSuggestions(searchMedications(value))
+    setQuery(e.target.value)
   }
 
   function handlePick(drug) {
-    // TODO (backend): saveMedication in App.jsx already forwards timeOfDay
-    // when a real Supabase project is connected — it just needs the
-    // /save-medication endpoint to accept and store a time_of_day column,
-    // which the original project plan's schema already included.
     onAdd({ ...drug, timeOfDay: timeOfDay || null })
     setQuery('')
-    setSuggestions([])
     setTimeOfDay('')
   }
 
@@ -72,6 +65,12 @@ function AddMedication({ onAdd }) {
 
       {query && suggestions.length === 0 && (
         <p className="suggestion-empty">No matches yet — try a different spelling.</p>
+      )}
+
+      {usingFallback && (
+        <p className="suggestion-empty">
+          (Backend unreachable — showing a small built-in demo list instead.)
+        </p>
       )}
     </div>
   )

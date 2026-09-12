@@ -1,4 +1,4 @@
-import { checkInteractions } from './interactionData.js'
+import { useInteractionCheck } from './useInteractionCheck.js'
 
 // The whole point of MedCheck is answering "is anything I'm taking risky?"
 // This banner answers that at the top of the page, before the user has to
@@ -29,9 +29,9 @@ function CheckIcon() {
 }
 
 function StatusBanner({ medications }) {
-  const flagged = medications.length >= 2 ? checkInteractions(medications) : []
-  const significant = flagged.filter((f) => f.severity === 'significant')
-  const minor = flagged.filter((f) => f.severity === 'minor')
+  const { interactions, loading } = useInteractionCheck(medications)
+  const significant = interactions.filter((f) => f.severity === 'significant')
+  const minor = interactions.filter((f) => f.severity === 'minor')
 
   // Nothing to say yet — don't show a scary-looking empty banner to
   // someone who just signed up.
@@ -46,6 +46,19 @@ function StatusBanner({ medications }) {
           <p className="status-banner-sub">
             Once you've added two or more, we'll check them for known interactions.
           </p>
+        </div>
+      </div>
+    )
+  }
+
+  if (loading) {
+    return (
+      <div className="status-banner status-banner-neutral">
+        <span className="status-banner-icon">
+          <CheckIcon />
+        </span>
+        <div>
+          <p className="status-banner-title">Checking your medications…</p>
         </div>
       </div>
     )

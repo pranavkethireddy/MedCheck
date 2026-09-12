@@ -94,7 +94,7 @@ plan" is a fair question a judge could ask.
 ## Setup
 
 1. Create a Supabase project at supabase.com (free tier).
-2. In the Supabase SQL editor, run `supabase/schema.sql`.
+2. In the Supabase SQL editor, run `supabase_sql/schema.sql`.
 3. Settings → API → copy the **Project URL** and the **service_role** key
    (not the anon key — see "Security notes" below).
 4. `cp .env.example .env` and fill in `SUPABASE_URL` and

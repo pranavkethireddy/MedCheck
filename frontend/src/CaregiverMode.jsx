@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import MedicationList from './MedicationList.jsx'
 import InteractionResults from './InteractionResults.jsx'
+import BodyMap from './BodyMap.jsx'
 import InfoTooltip from './InfoTooltip.jsx'
 
 // TODO (backend): this file uses a hardcoded mock directory instead of real
@@ -169,6 +170,17 @@ function CaregiverMode() {
               </InfoTooltip>
             </div>
             <InteractionResults medications={selectedPatient.medications} />
+          </section>
+
+          <section className="home-section">
+            <div className="section-heading-row">
+              <h2>Where it happens</h2>
+              <InfoTooltip>
+                Same interactions above, pinned to roughly where in the body
+                they show up.
+              </InfoTooltip>
+            </div>
+            <BodyMap medications={selectedPatient.medications} />
           </section>
         </>
       )}

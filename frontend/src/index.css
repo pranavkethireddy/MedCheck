@@ -1479,3 +1479,192 @@ h1, h2 {
 .site-main .home-main {
   gap: 0;
 }
+
+/* --- Body map --- */
+
+.body-map-wrap {
+  display: grid;
+  grid-template-columns: minmax(160px, 240px) 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 640px) {
+  .body-map-wrap {
+    grid-template-columns: 1fr;
+  }
+}
+
+.body-map-figure {
+  position: relative;
+  width: 100%;
+  max-width: 260px;
+  margin: 0 auto;
+  aspect-ratio: 1 / 1;
+  background: linear-gradient(180deg, var(--accent-soft) 0%, #eef3fc 100%);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.body-outline {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.body-pin {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.body-pin-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
+  transition: transform 0.15s ease;
+}
+
+.body-pin-significant .body-pin-dot,
+.body-pin-dot-significant {
+  background: var(--warn);
+}
+
+.body-pin-minor .body-pin-dot,
+.body-pin-dot-minor {
+  background: #c9a227;
+}
+
+.body-pin:hover .body-pin-dot,
+.body-pin-active .body-pin-dot {
+  transform: scale(1.35);
+}
+
+.body-map-side {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.body-map-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 1rem;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.body-map-legend li {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.body-map-tooltip {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem 0.9rem;
+  background: var(--card-bg);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.body-map-tooltip-region {
+  margin: 0;
+  font-weight: 600;
+  color: var(--panel-dark);
+}
+
+.body-map-tooltip-item + .body-map-tooltip-item {
+  border-top: 1px solid var(--border);
+  padding-top: 0.6rem;
+}
+
+.body-map-tooltip .severity-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  display: inline-block;
+  margin-bottom: 0.3rem;
+}
+
+.body-map-tooltip .severity-significant {
+  color: var(--warn);
+  background: #fbeee7;
+}
+
+.body-map-tooltip .severity-minor {
+  color: #9c7a13;
+  background: #fbf6e3;
+}
+
+/* --- Assistant memory (Backboard) --- */
+
+.assistant-memory {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.assistant-memory-form {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.assistant-memory-form input {
+  flex: 1;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+.assistant-memory-form button {
+  padding: 0.6rem 1rem;
+  border: none;
+  border-radius: 6px;
+  background: var(--accent);
+  color: white;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.assistant-memory-form button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.assistant-memory-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.assistant-memory-list li {
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card-bg);
+  color: var(--ink);
+  font-size: 0.92rem;
+}

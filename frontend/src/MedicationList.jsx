@@ -1,8 +1,11 @@
-// TODO: once the `medications` table exists in Supabase (see the SQL in
-// the project plan), replace the `medications` prop with a real fetch:
-//   const { data } = await supabase.from('medications').select('*').eq('user_id', userId)
-// For now this just renders whatever list gets passed in from App.jsx,
-// which starts out empty and grows as you add medications on screen.
+// App.jsx now owns real data: it fetches this list from Backend Person
+// 1's /api/get-medications on login and passes it down here, so this stays
+// a plain display component — no fetching happens in this file.
+//
+// Each `med` is either a real saved row from the backend (has `.id`, a
+// Supabase uuid) or, in demo mode with no Supabase project configured, a
+// plain { name, rxcui } the user just picked — hence `med.id ?? med.rxcui`
+// below as a stand-in unique key in both cases.
 
 function MedicationList({ medications, onRemove }) {
   if (medications.length === 0) {
@@ -11,18 +14,21 @@ function MedicationList({ medications, onRemove }) {
 
   return (
     <ul className="med-list">
-      {medications.map((med) => (
-        <li key={med.rxcui} className="med-list-item">
-          <span>{med.name}</span>
-          <button
-            type="button"
-            className="link-button"
-            onClick={() => onRemove(med.rxcui)}
-          >
-            Remove
-          </button>
-        </li>
-      ))}
+      {medications.map((med) => {
+        const key = med.id ?? med.rxcui
+        return (
+          <li key={key} className="med-list-item">
+            <span>{med.name}</span>
+            <button
+              type="button"
+              className="link-button"
+              onClick={() => onRemove(key)}
+            >
+              Remove
+            </button>
+          </li>
+        )
+      })}
     </ul>
   )
 }

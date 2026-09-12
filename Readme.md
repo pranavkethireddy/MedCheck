@@ -73,7 +73,7 @@ plan.md     Original project/build plan
 ## Running it locally
 
 See `backend/README.md` and `frontend/README.md` for full setup —
-short version: each side needs its own `.env` (copied from `.env.example`),
+short version: each side needs its own `.env`,
 then `uvicorn app.main:app --reload --port 3000` for the backend and
 `npm run dev` for the frontend.
 

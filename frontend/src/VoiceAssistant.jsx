@@ -4,6 +4,38 @@ import InfoTooltip from './InfoTooltip.jsx'
 import { useAiStatus } from './useAiStatus.js'
 import { formatCountdown } from './AiStatusBanner.jsx'
 
+// Chrome's MediaRecorder default (no mimeType passed) happens to be
+// audio/webm;codecs=opus, which is why this worked fine in testing here.
+// Safari — desktop AND iOS, which is the realistic "caregiver checking in
+// on their phone" scenario — does not support recording to webm at all; it
+// silently records a different container (MP4/AAC) instead. The old code
+// ignored that and hardcoded `type: 'audio/webm'` on the resulting Blob
+// regardless of what was actually recorded, so on Safari the bytes and the
+// label disagreed and ElevenLabs' STT would fail to decode it — surfacing
+// to the user as "speech to text just doesn't work," with no obvious error
+// unless they happened to check the network tab. Explicitly probing for a
+// supported mimeType (and using the recorder's own reported type on
+// playback/upload instead of a hardcoded guess) fixes this for every
+// browser rather than just the one this was originally tested in.
+const PREFERRED_MIME_TYPES = [
+  'audio/webm;codecs=opus',
+  'audio/webm',
+  'audio/mp4',
+  'audio/ogg;codecs=opus',
+  'audio/ogg',
+]
+
+function pickSupportedMimeType() {
+  if (typeof MediaRecorder === 'undefined' || !MediaRecorder.isTypeSupported) return ''
+  return PREFERRED_MIME_TYPES.find((type) => {
+    try {
+      return MediaRecorder.isTypeSupported(type)
+    } catch {
+      return false
+    }
+  }) || ''
+}
+
 function MicIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -53,16 +85,29 @@ function VoiceAssistant({
     setError('')
     setTranscript('')
     setReply('')
+
+    if (typeof MediaRecorder === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+      setError("Voice recording isn't supported in this browser.")
+      return
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      const recorder = new MediaRecorder(stream)
+      const mimeType = pickSupportedMimeType()
+      // Only pass a mimeType when we actually found a supported one — an
+      // unsupported explicit mimeType throws immediately, whereas omitting
+      // the option entirely lets the browser fall back to its own default.
+      const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream)
       chunksRef.current = []
       recorder.ondataavailable = (e) => {
         if (e.data.size > 0) chunksRef.current.push(e.data)
       }
       recorder.onstop = () => {
         stream.getTracks().forEach((t) => t.stop())
-        handleRecordingComplete(new Blob(chunksRef.current, { type: 'audio/webm' }))
+        // Use what the recorder actually reports, not a hardcoded guess —
+        // this is the field that was wrong before (see note above).
+        const actualType = recorder.mimeType || mimeType || 'audio/webm'
+        handleRecordingComplete(new Blob(chunksRef.current, { type: actualType }))
       }
       mediaRecorderRef.current = recorder
       recorder.start()

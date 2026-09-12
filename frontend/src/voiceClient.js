@@ -39,7 +39,14 @@ export async function speak(text) {
 // Blob (as produced by MediaRecorder in VoiceAssistant.jsx).
 export async function transcribe(audioBlob) {
   const formData = new FormData()
-  formData.append('audio', audioBlob, 'clip.webm')
+  // Match the filename extension to what was actually recorded (audioBlob.type,
+  // set by VoiceAssistant.jsx from the MediaRecorder's own reported mimeType —
+  // e.g. audio/mp4 on Safari) rather than always claiming .webm. The browser
+  // already sends the correct Content-Type on this form part from the Blob's
+  // type, which is what the backend forwards to ElevenLabs — this just keeps
+  // the filename honest too, in case anything downstream sniffs by extension.
+  const subtype = (audioBlob.type.split('/')[1] || 'webm').split(';')[0]
+  formData.append('audio', audioBlob, `clip.${subtype}`)
 
   const res = await fetch(`${BACKEND_URL}/api/voice/transcribe`, {
     method: 'POST',

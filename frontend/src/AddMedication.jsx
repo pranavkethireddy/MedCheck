@@ -1,16 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { searchDrugs } from './backendClient.js'
 
-// TODO: once your teammate's backend is up, replace MOCK_DRUGS and
-// searchMedications() below with a real fetch to their endpoint, e.g.:
-//
-//   const BACKEND_URL = 'http://localhost:4000' // ask your backend teammate for the real one
-//   async function searchMedications(query) {
-//     const res = await fetch(`${BACKEND_URL}/search-drugs?q=${encodeURIComponent(query)}`)
-//     if (!res.ok) throw new Error('Search failed')
-//     return res.json() // expected shape: [{ name, rxcui }, ...]
-//   }
-//
-// Until then, this fake version lets you build + demo the whole screen.
+// Used only if the real backend call fails (not running, network error,
+// etc.) so the screen still demos instead of just breaking — same
+// fallback philosophy as supabaseClient.js's demo-mode login.
 const MOCK_DRUGS = [
   { name: 'Ibuprofen', rxcui: '5640' },
   { name: 'Warfarin', rxcui: '11289' },
@@ -22,7 +15,7 @@ const MOCK_DRUGS = [
   { name: 'Aspirin', rxcui: '1191' },
 ]
 
-function searchMedications(query) {
+function searchMock(query) {
   const q = query.trim().toLowerCase()
   if (!q) return []
   return MOCK_DRUGS.filter((d) => d.name.toLowerCase().includes(q))
@@ -40,11 +33,42 @@ function SearchIcon() {
 function AddMedication({ onAdd }) {
   const [query, setQuery] = useState('')
   const [suggestions, setSuggestions] = useState([])
+  const [usingFallback, setUsingFallback] = useState(false)
+  const requestIdRef = useRef(0)
+
+  // Debounced real search: waits 250ms after the last keystroke before
+  // hitting the backend, and ignores any response that isn't from the
+  // most recent request (in case a slower earlier request resolves after
+  // a faster later one — otherwise stale results could flash on screen).
+  useEffect(() => {
+    const q = query.trim()
+    if (!q) {
+      setSuggestions([])
+      return
+    }
+
+    const thisRequestId = ++requestIdRef.current
+    const timer = setTimeout(async () => {
+      try {
+        const results = await searchDrugs(q)
+        if (requestIdRef.current === thisRequestId) {
+          setSuggestions(results)
+          setUsingFallback(false)
+        }
+      } catch (err) {
+        console.warn('search-drugs unreachable, falling back to mock list:', err.message)
+        if (requestIdRef.current === thisRequestId) {
+          setSuggestions(searchMock(q))
+          setUsingFallback(true)
+        }
+      }
+    }, 250)
+
+    return () => clearTimeout(timer)
+  }, [query])
 
   function handleChange(e) {
-    const value = e.target.value
-    setQuery(value)
-    setSuggestions(searchMedications(value))
+    setQuery(e.target.value)
   }
 
   function handlePick(drug) {
@@ -82,6 +106,12 @@ function AddMedication({ onAdd }) {
 
       {query && suggestions.length === 0 && (
         <p className="suggestion-empty">No matches yet — try a different spelling.</p>
+      )}
+
+      {usingFallback && (
+        <p className="suggestion-empty">
+          (Backend unreachable — showing a small built-in demo list instead.)
+        </p>
       )}
     </div>
   )

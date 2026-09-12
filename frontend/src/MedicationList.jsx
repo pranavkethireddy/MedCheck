@@ -33,33 +33,19 @@ function MedicationList({ medications, onRemove }) {
 
   return (
     <ul className="med-list">
-<<<<<<< HEAD
-      {medications.map((med, index) => (
-        <li key={med.rxcui} className="med-list-item med-item-pop">
-          <div className="med-item-main">
-            <span
-              className="med-icon-bubble"
-              style={{ backgroundColor: BUBBLE_COLORS[index % BUBBLE_COLORS.length] }}
-            >
-              <PillIcon />
-            </span>
-            <span>{med.name}</span>
-          </div>
-          <button
-            type="button"
-            className="link-button"
-            onClick={() => onRemove(med.rxcui)}
-          >
-            Remove
-          </button>
-        </li>
-      ))}
-=======
-      {medications.map((med) => {
+      {medications.map((med, index) => {
         const key = med.id ?? med.rxcui
         return (
-          <li key={key} className="med-list-item">
-            <span>{med.name}</span>
+          <li key={key} className="med-list-item med-item-pop">
+            <div className="med-item-main">
+              <span
+                className="med-icon-bubble"
+                style={{ backgroundColor: BUBBLE_COLORS[index % BUBBLE_COLORS.length] }}
+              >
+                <PillIcon />
+              </span>
+              <span>{med.name}</span>
+            </div>
             <button
               type="button"
               className="link-button"
@@ -70,7 +56,6 @@ function MedicationList({ medications, onRemove }) {
           </li>
         )
       })}
->>>>>>> e5bf374e7fa73930ab2331c1bd379b34bbb584a7
     </ul>
   )
 }

@@ -1,15 +1,17 @@
+import { formatTime } from './timing.js'
+
 // App.jsx now owns real data: it fetches this list from Backend Person
 // 1's /api/get-medications on login and passes it down here, so this stays
 // a plain display component — no fetching happens in this file.
 //
 // Each `med` is either a real saved row from the backend (has `.id`, a
 // Supabase uuid) or, in demo mode with no Supabase project configured, a
-// plain { name, rxcui } the user just picked — hence `med.id ?? med.rxcui`
-// below as a stand-in unique key in both cases.
-
-// A rotating set of colors so the list doesn't look flat/monochrome —
-// each medication gets a consistent color based on its position.
-const BUBBLE_COLORS = ['#2f5fd9', '#8b5cf6', '#ec6a5e', '#16a394', '#f2a93b']
+// plain { name, rxcui, timeOfDay } the user just picked — hence
+// `med.id ?? med.rxcui` below as a stand-in unique key in both cases.
+//
+// `readOnly` (used by CaregiverMode.jsx) hides the Remove button, since
+// caregivers can view a patient's medications but shouldn't be able to
+// change them.
 
 function PillIcon() {
   return (
@@ -19,7 +21,7 @@ function PillIcon() {
   )
 }
 
-function MedicationList({ medications, onRemove }) {
+function MedicationList({ medications, onRemove, readOnly = false }) {
   if (medications.length === 0) {
     return (
       <div className="med-list-empty-wrap">
@@ -33,26 +35,26 @@ function MedicationList({ medications, onRemove }) {
 
   return (
     <ul className="med-list">
-      {medications.map((med, index) => {
+      {medications.map((med) => {
         const key = med.id ?? med.rxcui
         return (
           <li key={key} className="med-list-item med-item-pop">
             <div className="med-item-main">
-              <span
-                className="med-icon-bubble"
-                style={{ backgroundColor: BUBBLE_COLORS[index % BUBBLE_COLORS.length] }}
-              >
+              <span className="med-icon-bubble" style={{ backgroundColor: 'var(--accent)' }}>
                 <PillIcon />
               </span>
               <span>{med.name}</span>
+              {med.timeOfDay && <span className="med-time-badge">{formatTime(med.timeOfDay)}</span>}
             </div>
-            <button
-              type="button"
-              className="link-button"
-              onClick={() => onRemove(key)}
-            >
-              Remove
-            </button>
+            {!readOnly && (
+              <button
+                type="button"
+                className="link-button"
+                onClick={() => onRemove(key)}
+              >
+                Remove
+              </button>
+            )}
           </li>
         )
       })}

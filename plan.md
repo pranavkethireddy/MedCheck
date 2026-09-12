@@ -337,6 +337,77 @@ Scan a pill bottle barcode (OpenFDA NDC lookup) instead of typing manually. Flas
 
 ---
 
-## 11. Important Framing Reminder
+## 12. Task List — 3-Person Team (1 Frontend, 2 Backend)
+
+### Frontend (1 person)
+
+**Phase 1 — Core UI (Friday night–Saturday morning)**
+- [ ] Set up React project + connect to Supabase client (auth + data fetch)
+- [ ] Build sign up / log in screens (Supabase Auth)
+- [ ] Build "Add Medication" screen with autocomplete search input (hits backend's `/search-drugs` endpoint)
+- [ ] Build medication list view (shows what's currently saved for the user)
+
+**Phase 2 — Results & wow layers (Saturday)**
+- [ ] Build interaction results screen: severity-sorted list, color-coded badges
+- [ ] Build body map visualization (Priority 1) — SVG/silhouette that highlights affected system by severity color
+- [ ] Build timeline/schedule view (Priority 2) — simple day-view showing when each med is taken, highlighting overlapping times
+- [ ] Add toggle UI for Claude vs. Gemini explanation mode (Priority 3)
+- [ ] Add "play voice explanation" button per flagged interaction (Priority 5, hooks into backend's ElevenLabs endpoint)
+
+**Phase 3 — Polish (Saturday night–Sunday morning)**
+- [ ] Loading states, empty states, error states
+- [ ] Mobile-responsive pass
+- [ ] Wire up mock patient data for demo fallback (in case live APIs are flaky during judging)
+- [ ] Final demo run-through with the team
+
+---
+
+### Backend Person 1 — Data & Drug Logic
+
+**Phase 1 (Friday night–Saturday morning)**
+- [ ] Set up Supabase project: create `medications` and `interaction_flags` tables (schema in Section 4a)
+- [ ] Build `/search-drugs` endpoint wrapping RxNorm autocomplete (Section 5a)
+- [ ] Build `/save-medication` endpoint (writes to Supabase, Section 4c)
+- [ ] Build `/get-medications` endpoint (reads from Supabase, Section 4d)
+
+**Phase 2 (Saturday)**
+- [ ] Build `/check-interactions` endpoint wrapping RxNav Interaction API (Section 5b)
+- [ ] Implement severity sorting logic (Section 5c)
+- [ ] Build `/save-interaction-flag` endpoint (Section 4e)
+- [ ] Add `time_of_day` handling to support the timeline/schedule feature — write logic to detect overlapping dose times
+
+**Phase 3 (Saturday night–Sunday)**
+- [ ] Set up mock patient data endpoint for demo reliability (Section 5d)
+- [ ] Help debug integration between frontend and Supabase
+- [ ] Deploy backend + confirm Vercel deployment works end-to-end
+
+---
+
+### Backend Person 2 — AI & Integrations (Claude/Gemini, Backboard, ElevenLabs)
+
+**Phase 1 (Friday night–Saturday morning)**
+- [ ] Build `/explain-interaction` endpoint using Claude API (Section 6)
+- [ ] Test with a few real RxNav interaction descriptions to make sure explanations sound calm/non-alarming
+
+**Phase 2 (Saturday)**
+- [ ] Add Gemini API as a second explanation mode, toggled by the frontend (Priority 3 wow layer)
+- [ ] Integrate Backboard for persistent memory — store user's medication history/context so returning users don't start from scratch (Priority 4 wow layer)
+- [ ] Integrate ElevenLabs — build `/text-to-speech` endpoint that takes a plain-English explanation and returns audio (Priority 5 wow layer)
+
+**Phase 3 (Saturday night–Sunday)**
+- [ ] Test full pipeline: interaction found → explained → remembered → voiced, end to end
+- [ ] Backup plan: if any single API is flaky near judging, make sure the app gracefully falls back (e.g., skip voice, show text only)
+- [ ] Help with final Devpost write-up on how Backboard/ElevenLabs/Gemini were used (needed for challenge eligibility)
+
+---
+
+### Shared / Whole-Team Tasks
+- [ ] Register GoDaddy domain (5 min, do this early so it's not forgotten)
+- [ ] Write and record the 3-4 minute Devpost submission video (Section 9 has your demo script)
+- [ ] Do at least one full run-through of the live judging demo together before Sunday morning
+- [ ] Confirm which track + which challenges you're submitting to on Devpost (Section 8)
+
+
+## 13. Important Framing Reminder
 
 Always position MedCheck as a tool that **empowers better conversations with pharmacists/doctors** — never as something that diagnoses, overrides, or judges a prescription as "wrong." This is both the safer framing and the more credible one for judges, since interaction databases don't have a patient's full clinical picture.

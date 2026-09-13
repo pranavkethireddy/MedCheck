@@ -59,7 +59,7 @@ rate-limit the other — see `backend/README.md` for setup.
 
 ## Prize tracks
 
-Healthcare, Best Use of Gemini, Best Use of ElevenLabs, Best Use of Backboard.
+Healthcare, Best Use of Gemini, Best Use of ElevenLabs, Best Use of Backboard, Best Domain Name from GoDaddy Registry.
 
 ## Project structure
 

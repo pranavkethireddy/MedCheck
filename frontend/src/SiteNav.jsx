@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import ModeSwitcher from './ModeSwitcher.jsx'
 import { useDarkMode } from './useDarkMode.js'
 
@@ -139,6 +140,25 @@ function BrainIcon() {
   )
 }
 
+// Hamburger / close toggle for the sub-900px dropdown — see the
+// site-nav-mobile-toggle / site-nav-links-open CSS. Hidden entirely above
+// 900px, where the full link list already shows inline.
+function MenuIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function CloseIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 // Each item is its own page now (see App.jsx's activeSection) rather than
 // an anchor-scroll target on one long page — clicking one swaps which page
 // is rendered instead of jumping the scroll position. Interactions and the
@@ -157,6 +177,7 @@ const NAV_ITEMS = [
 
 function SiteNav({ mode, onModeChange, activeSection, onNavigate, userEmail, displayName, avatarUrl, onLogout, isRealUser }) {
   const { theme, toggleTheme } = useDarkMode()
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const items = isRealUser ? [...NAV_ITEMS, { id: 'memory', label: 'Assistant memory', Icon: BrainIcon }] : NAV_ITEMS
 
   return (
@@ -168,6 +189,7 @@ function SiteNav({ mode, onModeChange, activeSection, onNavigate, userEmail, dis
           onClick={() => {
             onModeChange('individual')
             onNavigate('overview')
+            setMobileMenuOpen(false)
           }}
         >
           <span className="site-nav-brand-icon">
@@ -177,14 +199,29 @@ function SiteNav({ mode, onModeChange, activeSection, onNavigate, userEmail, dis
         </button>
 
         {mode === 'individual' && (
-          <ul className="site-nav-links">
+          <button
+            type="button"
+            className="site-nav-mobile-toggle"
+            onClick={() => setMobileMenuOpen((open) => !open)}
+            aria-expanded={mobileMenuOpen}
+            aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+          >
+            {mobileMenuOpen ? <CloseIcon /> : <MenuIcon />}
+          </button>
+        )}
+
+        {mode === 'individual' && (
+          <ul className={`site-nav-links${mobileMenuOpen ? ' site-nav-links-open' : ''}`}>
             {items.map(({ id, label, Icon }) => (
               <li key={id}>
                 <button
                   type="button"
                   className={activeSection === id ? 'active' : ''}
                   aria-current={activeSection === id ? 'page' : undefined}
-                  onClick={() => onNavigate(id)}
+                  onClick={() => {
+                    onNavigate(id)
+                    setMobileMenuOpen(false)
+                  }}
                 >
                   <Icon /> {label}
                 </button>

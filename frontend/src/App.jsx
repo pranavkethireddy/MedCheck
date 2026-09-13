@@ -24,6 +24,7 @@ import { saveMedication, getMedications, deleteMedication, updateMedicationTime 
 import { readCaregiverCodeFromUrl, clearCaregiverCodeFromUrl } from './caregiverLink.js'
 import { useInteractionCheck } from './useInteractionCheck.js'
 import GhostFibers from './components/GhostFibers'
+import MedicationCalendar from './MedicationCalendar.jsx'
 
 const PAGE_META = {
   overview: {
@@ -311,6 +312,9 @@ function App() {
                     {medications.length < 2 && (
                       <OnboardingChecklist medications={medications} onNavigate={setActiveSection} />
                     )}
+                    <div className="home-section">
+                      <MedicationCalendar medications={medications} />
+                    </div>
                   </section>
                 )}
 

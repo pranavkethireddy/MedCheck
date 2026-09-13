@@ -5,6 +5,7 @@ import BodyMap from './BodyMap.jsx'
 import MedicationTimeline from './MedicationTimeline.jsx'
 import RiskSummaryCard from './RiskSummaryCard.jsx'
 import MedicationLog from './MedicationLog.jsx'
+import MedicationCalendar from './MedicationCalendar.jsx'
 import VoiceAssistant from './VoiceAssistant.jsx'
 import InfoTooltip from './InfoTooltip.jsx'
 import PrintButton from './PrintButton.jsx'
@@ -254,14 +255,6 @@ function CaregiverMode({ userId, initialCode }) {
   // rather than plumbing it through props.
   const { interactions: selectedInteractions } = useInteractionCheck(selectedMedications)
 
-  // Same fixed-6/6-or-full-12 pairing rule as the individual dashboard (see
-  // App.jsx) — a section whose row-partner can be absent on its own falls
-  // back to the full 12 columns instead of sitting half-width with empty
-  // space next to it.
-  const medsListSpan = selectedMedications.length >= 2 ? 'grid-span-6' : 'grid-span-12'
-  const scheduleReady = medsReady && selectedMedications.length >= 1
-  const logSpan = scheduleReady ? 'grid-span-6' : 'grid-span-12'
-
   return (
     <main className="home-main">
       <section className="home-section grid-span-12">
@@ -368,7 +361,7 @@ function CaregiverMode({ userId, initialCode }) {
             />
           </section>
 
-          <section className={`home-section ${medsListSpan}`}>
+          <section className="home-section grid-span-12">
             <div className="section-heading-row">
               <h2>{selectedPatient.name}'s medications</h2>
               <InfoTooltip>
@@ -384,7 +377,7 @@ function CaregiverMode({ userId, initialCode }) {
           </section>
 
           {medsReady && selectedMedications.length >= 2 && (
-            <section className="home-section home-section-primary grid-span-6">
+            <section className="home-section home-section-primary grid-span-12">
               <div className="section-heading-row">
                 <h2>
                   AI risk overview <span className="feature-new-badge">New</span>
@@ -399,7 +392,7 @@ function CaregiverMode({ userId, initialCode }) {
             </section>
           )}
 
-          <section className="home-section grid-span-6">
+          <section className="home-section grid-span-12">
             <div className="section-heading-row">
               <h2>Interaction check</h2>
               <InfoTooltip>
@@ -416,7 +409,7 @@ function CaregiverMode({ userId, initialCode }) {
             <InteractionResults medications={selectedMedications} />
           </section>
 
-          <section className="home-section grid-span-6">
+          <section className="home-section grid-span-12">
             <div className="section-heading-row">
               <h2>Where it happens</h2>
               <InfoTooltip>
@@ -428,7 +421,7 @@ function CaregiverMode({ userId, initialCode }) {
           </section>
 
           {medsReady && selectedMedications.length >= 1 && (
-            <section className="home-section grid-span-6">
+            <section className="home-section grid-span-12">
               <div className="section-heading-row">
                 <h2>
                   Daily schedule <span className="feature-new-badge">New</span>
@@ -443,7 +436,7 @@ function CaregiverMode({ userId, initialCode }) {
             </section>
           )}
 
-          <section className={`home-section ${logSpan}`}>
+          <section className="home-section grid-span-12">
             <MedicationLog
               patientName={selectedPatient.name}
               medications={selectedMedications}
@@ -454,6 +447,15 @@ function CaregiverMode({ userId, initialCode }) {
               onMarkTaken={handleMarkTaken}
             />
           </section>
+
+          {medsReady && selectedMedications.length >= 1 && (
+            <section className="home-section grid-span-12">
+              <MedicationCalendar
+                medications={selectedMedications}
+                patientName={selectedPatient.name}
+              />
+            </section>
+          )}
         </>
       )}
     </main>

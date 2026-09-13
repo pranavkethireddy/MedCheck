@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import InfoTooltip from './InfoTooltip.jsx'
 import { findScheduleOverlaps, formatTime, timeToMinutes } from './timing.js'
 
 // A day-view schedule: every medication with a time set gets plotted on a
@@ -118,12 +117,18 @@ function MedicationTimeline({ medications }) {
         <div className="med-timeline-warning">
           <strong>
             {overlaps.length} pair{overlaps.length === 1 ? '' : 's'} scheduled within an hour of each other:
-          </strong>{' '}
-          {overlaps
-            .map((o) => `${o.a.name} (${formatTime(o.a.timeOfDay)}) + ${o.b.name} (${formatTime(o.b.timeOfDay)})`)
-            .join('; ')}
-          . Taking medications close together in time can make it harder to tell which one caused a side effect —
-          worth mentioning to your pharmacist.
+          </strong>
+          <ul className="med-timeline-overlap-list">
+            {overlaps.map((o) => (
+              <li key={`${o.a.name}-${o.b.name}`}>
+                {o.a.name} ({formatTime(o.a.timeOfDay)}) + {o.b.name} ({formatTime(o.b.timeOfDay)})
+              </li>
+            ))}
+          </ul>
+          <p className="med-timeline-warning-note">
+            Taking medications close together in time can make it harder to tell which one caused a
+            side effect — worth mentioning to your pharmacist.
+          </p>
         </div>
       )}
 

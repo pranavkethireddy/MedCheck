@@ -134,12 +134,14 @@ function DashboardStats({ medications, interactions, loading }) {
         </div>
       </BorderGlow>
 
-      <BorderGlow {...glowProps}>
+            <BorderGlow {...glowProps}>
         <div className="stat-card">
-          <span className="stat-card-icon">
-            <ShieldIcon />
-          </span>
-          <p className={`stat-chip ${riskClass}`}>{riskLabel}</p>
+          <div className="stat-card-icon-chip-row">
+            <span className="stat-card-icon">
+              <ShieldIcon />
+            </span>
+            <p className={`stat-chip ${riskClass}`}>{riskLabel}</p>
+          </div>
           <p className="stat-card-label">Overall risk read</p>
         </div>
       </BorderGlow>

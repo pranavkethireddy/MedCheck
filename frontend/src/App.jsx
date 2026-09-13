@@ -28,7 +28,7 @@ import MedicationCalendar from './MedicationCalendar.jsx'
 
 const PAGE_META = {
   overview: {
-    sub: 'Everything you take, checked against known interactions — so you know what to bring up with your provider.',
+    sub: 'Everything you take, checked against known interactions so you know what to bring up with your provider.',
   },
   ai: {
     sub: "A detailed, plain-language read of your overall risk, plus a recommendation for every combination Gemini flags.",

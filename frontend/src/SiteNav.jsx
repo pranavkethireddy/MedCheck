@@ -183,13 +183,13 @@ function SiteNav({ mode, onModeChange, activeSection, onNavigate, userEmail, dis
   return (
     <nav className="site-nav">
       <div className="site-nav-inner">
-        <button
+                <button
           type="button"
           className="site-nav-brand"
           onClick={() => {
             onModeChange('individual')
             onNavigate('overview')
-            setMobileMenuOpen(false)
+            setMobileMenuOpen((open) => !open)
           }}
         >
           <span className="site-nav-brand-icon">
@@ -197,18 +197,6 @@ function SiteNav({ mode, onModeChange, activeSection, onNavigate, userEmail, dis
           </span>
           <span className="site-nav-brand-text">MedCheck</span>
         </button>
-
-        {mode === 'individual' && (
-          <button
-            type="button"
-            className="site-nav-mobile-toggle"
-            onClick={() => setMobileMenuOpen((open) => !open)}
-            aria-expanded={mobileMenuOpen}
-            aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
-          >
-            {mobileMenuOpen ? <CloseIcon /> : <MenuIcon />}
-          </button>
-        )}
 
         {mode === 'individual' && (
           <ul className={`site-nav-links${mobileMenuOpen ? ' site-nav-links-open' : ''}`}>
